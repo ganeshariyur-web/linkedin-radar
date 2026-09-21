@@ -1,5 +1,7 @@
 # LinkedIn Radar
 
+**Live:** https://radar-transformsmarter.netlify.app (Netlify team "Transform Smarter", site `radar-transformsmarter`). Source: private repo `ganeshariyur-web/linkedin-radar`.
+
 A private web app that scores your LinkedIn **Connections** and **Invitations** against your ideal customer profile, live, using TypeSafe's Jev model. Files are parsed in your browser and never uploaded; only the job title, company name and a few code-computed buckets reach Jev. Results and presets persist in your browser (IndexedDB). No database, no accounts.
 
 - **Radar**: upload, run, watch each row score, inspect any person, filter, download CSVs per tier.
@@ -86,6 +88,16 @@ Enrichment configuration is one file: [`src/config/apify.ts`](src/config/apify.t
 - `POSTS_ACTOR`: `null`. Set one to populate `last_post_date` / `posts_last_30_days`; until then `active_on_linkedin` resolves to `unknown` by design.
 
 To swap: change `slug`, `actorId`, pricing and `maxItemsPerRun`; rewrite `buildInput` for the new input schema; rewrite the `map*Item` function for the new output. The API route (`src/app/api/enrich/route.ts`) only accepts LinkedIn profile or company URLs and never sees anything else. If Apify is unavailable, the **Import enrichment JSON** drop zone accepts raw actor items or a previous export.
+
+## Deploy
+
+The site is deployed manually from this folder with the Netlify CLI (the CLI login was authorised once in the browser; no token is stored in the repo):
+
+```bash
+npx netlify-cli deploy --build --prod
+```
+
+That runs the contract check and `next build`, then uploads the result. Environment variables live on the Netlify site as secrets and are read by the two functions only. To switch to push-to-deploy, link the GitHub repository in the Netlify dashboard (Site configuration → Build & deploy → Continuous deployment → Link repository); `netlify.toml` already declares the build command and the Next.js plugin. Netlify rejects site names containing "linkedin", which is why the site is called `radar-transformsmarter`.
 
 ## Architecture
 
