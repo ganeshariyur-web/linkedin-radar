@@ -1,0 +1,15 @@
+{
+  "company": "[your company and what it sells]",
+  "targetRoles": [
+    "Chief of Staff",
+    "COO",
+    "CEO",
+    "President / Managing Director / Owner at family-owned companies"
+  ],
+  "geography": "United States first; other countries rank lower, not excluded",
+  "companyProfile": "Privately held or family-owned; manufacturing, industrial, distribution, construction, logistics preferred; over $50M revenue or 150+ employees when revenue is unknown",
+  "disqualifiers": "Students, job seekers, recruiters, agencies selling to me, founders of pre-revenue startups",
+  "preferredIndustries": ["manufacturing", "industrial", "distribution", "construction", "logistics"],
+  "revenueThreshold": "$50M revenue (or 150+ employees when revenue is unknown)",
+  "primaryCountry": "United States"
+}
