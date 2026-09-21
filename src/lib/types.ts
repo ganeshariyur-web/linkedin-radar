@@ -164,6 +164,8 @@ export interface Enrichment {
   companySize: number | null;
   companySizeRange: string | null;
   companyIndustry: string | null;
+  /** LinkedIn ownership label, e.g. "Privately Held", "Public Company", "Self-Owned". */
+  companyOwnership: string | null;
   followerCount: number | null;
   connectionsCount: number | null;
   openToWork: boolean | null;

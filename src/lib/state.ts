@@ -48,6 +48,7 @@ export function postState(e: Enrichment, fields: string[]): JevState {
     company_size: e.companySize,
     company_size_range: e.companySizeRange,
     company_industry: e.companyIndustry,
+    company_ownership: e.companyOwnership,
     follower_count: e.followerCount,
     connections_count: e.connectionsCount,
     open_to_work: e.openToWork,

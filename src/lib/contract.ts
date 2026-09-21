@@ -30,6 +30,7 @@ export const CONTRACT: Record<Tab, Record<Pass, ContractField[]>> = {
       { name: "company_size", source: "Apify company: employeeCount", description: "Employee count of the current company.", presence: "when present" },
       { name: "company_size_range", source: "Apify company: employeeCountRange", description: "LinkedIn size band, e.g. 201-500.", presence: "when present" },
       { name: "company_industry", source: "Apify company: industry", description: "LinkedIn industry label.", presence: "when present" },
+      { name: "company_ownership", source: "Apify company: companyType", description: "LinkedIn ownership label: Privately Held, Public Company, Self-Owned, Nonprofit, etc.", presence: "when present" },
       { name: "follower_count", source: "Apify profile: followerCount", description: "Follower count.", presence: "when present" },
       { name: "connections_count", source: "Apify profile: connectionsCount", description: "Connection count.", presence: "when present" },
       { name: "open_to_work", source: "Apify profile: openToWork", description: "Open-to-work flag.", presence: "when present" },

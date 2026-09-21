@@ -164,9 +164,9 @@ export function buildDefaultQuestions(icp: IcpConfig): QuestionSpec[] {
       tab: "connections",
       pass: "post",
       enabled: true,
-      fields: ["current_company", "company_industry", "headline", "about"],
+      fields: ["current_company", "company_industry", "company_ownership", "headline", "about"],
       instructions:
-        "The person's current company is a family-owned or closely held private business, judged from `current_company`, `company_industry`, `headline` and `about`.",
+        "The person's current company is a family-owned or closely held private business, judged from `company_ownership` (LinkedIn's label such as Privately Held, Self-Owned or Public Company) when present, and otherwise from `current_company`, `company_industry`, `headline` and `about`.",
     },
     {
       id: "decision_maker",

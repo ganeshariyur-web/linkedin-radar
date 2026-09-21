@@ -82,6 +82,7 @@ function toEnrichment(rowId: string, p: MappedProfile, source: Enrichment["sourc
     companySize: null,
     companySizeRange: null,
     companyIndustry: null,
+    companyOwnership: null,
     followerCount: p.followerCount,
     connectionsCount: p.connectionsCount,
     openToWork: p.openToWork,
@@ -112,6 +113,7 @@ export function attachProfiles(items: MappedProfile[], source: Enrichment["sourc
       e.companySize = existing.companySize;
       e.companySizeRange = existing.companySizeRange;
       e.companyIndustry = existing.companyIndustry;
+      e.companyOwnership = existing.companyOwnership;
     }
     out.push(e);
   }
@@ -131,7 +133,7 @@ export function attachCompanies(items: MappedCompany[]): number {
     if (!e.companyLinkedinUrl) continue;
     const c = byKey.get(urlKey(e.companyLinkedinUrl));
     if (!c) continue;
-    out.push({ ...e, companySize: c.employeeCount, companySizeRange: c.employeeCountRange, companyIndustry: c.industry });
+    out.push({ ...e, companySize: c.employeeCount, companySizeRange: c.employeeCountRange, companyIndustry: c.industry, companyOwnership: c.companyType });
   }
   useApp.getState().setEnrichment(out);
   return out.length;
