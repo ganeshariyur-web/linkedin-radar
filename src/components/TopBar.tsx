@@ -10,6 +10,9 @@ import { Tile, fmtInt, fmtMs } from "./ui";
 export function TopBar({ tab, tier1Count, rowsRead, questionCount, onOpenUploads }: { tab: Tab; tier1Count: number; rowsRead: number; questionCount: number; onOpenUploads?: () => void }) {
   const run = useApp((s) => s.run);
   const results = useApp((s) => s.results);
+  const presets = useApp((s) => s.presets);
+  const activePresetName = useApp((s) => s.activePresetName);
+  const setActivePreset = useApp((s) => s.setActivePreset);
   const [, tick] = useState(0);
   useEffect(() => {
     if (run.status !== "running") return;
@@ -42,6 +45,12 @@ export function TopBar({ tab, tier1Count, rowsRead, questionCount, onOpenUploads
       <div className="flex flex-wrap items-center justify-between gap-4">
         <UploadBar onOpenUploads={onOpenUploads} />
         <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-xs">
+            <span className="label">Lens</span>
+            <select className="input !w-48" value={activePresetName} onChange={(e) => setActivePreset(e.target.value)} aria-label="Active preset" data-testid="preset-select" disabled={running}>
+              {presets.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
+            </select>
+          </label>
           {running ? (
             <button className="btn accent" onClick={onPause} data-testid="pause">Pause</button>
           ) : (
