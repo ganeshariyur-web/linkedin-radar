@@ -7,6 +7,7 @@ import { resultKey, useActivePreset, useApp } from "./store";
 import { BUCKET_LABEL, companySizeBand, connectionTier, invitationBucket, rankScore, TIER_LABEL } from "./tiers";
 import type { ConnectionRow, ConnectionTier, Enrichment, InvitationBucket, InvitationRow, RowResult, Tab } from "./types";
 import { initials, initialsFromFull } from "./names";
+import { buildWatchlist } from "./watchlist";
 
 export interface ScoredConnection {
   kind: "connection";
@@ -19,6 +20,8 @@ export interface ScoredConnection {
   name: string;
   initials: string;
   rank: { geoFirst: number; score: number };
+  /** Matched watchlist entry, when the preset has one. */
+  watchlisted: string | null;
 }
 
 export interface ScoredInvitation {
@@ -42,10 +45,12 @@ export function useScoredConnections(): ScoredConnection[] {
   const preset = useActivePreset();
   return useMemo(() => {
     const rows = connections?.rows ?? [];
+    const wl = buildWatchlist(preset.watchlist);
     return rows.map((row) => {
       const pre = results[resultKey(row.id, "pre")];
       const post = results[resultKey(row.id, "post")];
       const e = enrichment[row.id];
+      const watchlisted = wl.size ? wl.match(row.company) : null;
       return {
         kind: "connection" as const,
         id: row.id,
@@ -53,10 +58,11 @@ export function useScoredConnections(): ScoredConnection[] {
         pre,
         post,
         enrichment: e,
-        tier: connectionTier(row, pre, preset.thresholds, preset.icp),
+        tier: connectionTier(row, pre, preset.thresholds, preset.icp, !!watchlisted),
         name: `${row.firstName} ${row.lastNameClean}`.trim(),
         initials: initials(row.firstName, row.lastNameClean),
         rank: rankScore(post, preset.thresholds),
+        watchlisted,
       };
     });
   }, [connections, results, enrichment, preset]);
@@ -97,11 +103,12 @@ export interface Filters {
   connectedFor: string[];
   hasEmail: "any" | "yes" | "no";
   privateFamily: "any" | "yes" | "no";
+  watchlist: "any" | "yes" | "no";
   text: string;
 }
 
 export const emptyFilters: Filters = {
-  tier: [], role: [], companyType: [], country: [], sizeBand: [], activity: [], connectedFor: [], hasEmail: "any", privateFamily: "any", text: "",
+  tier: [], role: [], companyType: [], country: [], sizeBand: [], activity: [], connectedFor: [], hasEmail: "any", privateFamily: "any", watchlist: "any", text: "",
 };
 
 export function applyFilters(rows: ScoredRow[], f: Filters, privateMin: number): ScoredRow[] {
@@ -126,6 +133,8 @@ export function applyFilters(rows: ScoredRow[], f: Filters, privateMin: number):
       const pf = r.pre?.answers.likely_private_or_family?.noul ?? 0;
       if (f.privateFamily === "yes" && pf < privateMin) return false;
       if (f.privateFamily === "no" && pf >= privateMin) return false;
+      if (f.watchlist === "yes" && !r.watchlisted) return false;
+      if (f.watchlist === "no" && r.watchlisted) return false;
     }
     if (text) {
       const hay = r.kind === "connection"

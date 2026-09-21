@@ -1,0 +1,19 @@
+{
+  "company": "Ganesh Ariyur, Transformation CIO / CDIO candidate. Lens on executives at the largest US public companies. Company membership is matched in code against the preset's watchlist (paste the Fortune 1000 names in Classifier Studio); before enrichment Jev only judges the role and whether the company reads as a well-known large public corporation.",
+  "targetRoles": [
+    "CEO",
+    "COO",
+    "CFO",
+    "CHRO / Chief People Officer",
+    "CIO / CTO / CDO peer",
+    "Board member / Board director",
+    "Division President / General Manager / Business unit leader"
+  ],
+  "geography": "United States first; other countries rank lower, not excluded",
+  "companyProfile": "Fortune 1000 companies: the largest US corporations by revenue, public and private; healthcare, life sciences, MedTech, manufacturing and industrials preferred but any sector counts",
+  "disqualifiers": "Students and interns, early-career job seekers asking for mentoring, vendors and agencies selling services to CIOs, lead-generation and marketing agencies, founders of pre-revenue startups",
+  "preferredIndustries": ["healthcare", "life sciences", "medtech", "manufacturing", "industrials"],
+  "revenueThreshold": "$2B revenue (roughly the Fortune 1000 cut-off; or 5,000+ employees when revenue is unknown)",
+  "primaryCountry": "United States",
+  "decisionAuthority": "authority to hire or sponsor a C-level or divisional technology executive at a large public company, or a board seat that approves such a hire"
+}

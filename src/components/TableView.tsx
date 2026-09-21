@@ -35,7 +35,7 @@ export function TableView({ rows }: { rows: ScoredRow[] }) {
                   <>
                     <td className="max-w-[16rem] truncate" title={r.row.position}>{r.row.position || <em className="text-muted">empty</em>}</td>
                     <td className="max-w-[12rem] truncate" title={r.row.company}>{r.row.company || <em className="text-muted">empty</em>}</td>
-                    <td className={r.tier === "tier1" ? "text-accent" : ""}>{TIER_LABEL[r.tier]}</td>
+                    <td className={r.tier === "tier1" ? "text-accent" : ""}>{TIER_LABEL[r.tier]}{r.watchlisted ? <span className="label ml-1" title={`Watchlist: ${r.watchlisted}`}>★</span> : null}</td>
                     <td className="font-mono">{r.pre?.answers.role?.answer ?? "–"}</td>
                     <td className="font-mono">{pct(r.pre?.answers.role?.confidence)}</td>
                     <td className="font-mono">{r.pre?.answers.company_type?.answer ?? "–"}</td>

@@ -5,7 +5,8 @@ import { Label, fmtInt } from "../ui";
 const SLIDERS: { key: keyof Thresholds; label: string; hint: string }[] = [
   { key: "t1RoleConfidence", label: "Tier 1: target-role confidence ≥", hint: "Also the upper bound of the Tier 2 band." },
   { key: "t1DisqualifiedMax", label: "Tier 1: disqualified probability <", hint: "" },
-  { key: "t1BigBrandMax", label: "Tier 1: big public brand probability <", hint: "" },
+  { key: "t1BigBrandMax", label: "Tier 1: big public brand probability <", hint: "Set above 1.00 to allow public companies." },
+  { key: "t1BigBrandMin", label: "Tier 1: big public brand probability ≥", hint: "0 disables. Raise it to target large public companies." },
   { key: "t2RoleConfidenceMin", label: "Tier 2: target-role confidence ≥", hint: "Band runs up to the Tier 1 threshold." },
   { key: "t2PrivateFamilyMin", label: "Tier 2: private/family probability ≥ (any executive role)", hint: "" },
   { key: "rejectedDisqualifiedMin", label: "Rejected: disqualified probability ≥", hint: "Empty-position rows are exempt and land in Tier 2." },
@@ -35,10 +36,16 @@ export function ThresholdSliders({ th, onChange, tierCounts, bucketCounts, jevCa
         {SLIDERS.map((s) => (
           <div key={s.key}>
             <div className="flex justify-between text-xs"><span>{s.label}</span><span className="font-mono" data-testid={`th-${s.key}`}>{(th[s.key] as number).toFixed(2)}</span></div>
-            <input type="range" min={0} max={1} step={0.01} value={th[s.key] as number} onChange={(e) => onChange({ ...th, [s.key]: Number(e.target.value) })} aria-label={s.label} data-testid={`slider-${s.key}`} className="mt-1" />
+            <input type="range" min={0} max={s.key === "t1BigBrandMax" || s.key === "t2PrivateFamilyMin" ? 1.01 : 1} step={0.01} value={th[s.key] as number} onChange={(e) => onChange({ ...th, [s.key]: Number(e.target.value) })} aria-label={s.label} data-testid={`slider-${s.key}`} className="mt-1" />
             {s.hint && <div className="text-[10px] text-muted mt-0.5">{s.hint}</div>}
           </div>
         ))}
+      </div>
+      <div className="mt-4">
+        <label className="text-xs flex items-center gap-2">
+          <input type="checkbox" checked={!!th.watchlistTier1Only} onChange={(e) => onChange({ ...th, watchlistTier1Only: e.target.checked })} data-testid="th-watchlist-only" />
+          <span>Tier 1 requires a company on this preset&apos;s watchlist (others cap at Tier 2)</span>
+        </label>
       </div>
       <div className="mt-4">
         <Label>Senior buckets (Invitations Accept)</Label>

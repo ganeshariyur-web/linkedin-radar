@@ -36,6 +36,7 @@ export function VerifyingProfile({ rows, questions }: { rows: ScoredRow[]; quest
                     <span>Connected {row.row.connectedFor ?? "–"}</span>
                     {row.row.hasEmail && <span>· email on file</span>}
                     <span className="text-fg">· {TIER_LABEL[row.tier]}</span>
+                    {row.watchlisted && <span className="text-accent">· watchlist: {row.watchlisted}</span>}
                   </div>
                   {row.enrichment && (
                     <div className="mt-1">{[row.enrichment.headline, row.enrichment.location].filter(Boolean).join(" · ")}</div>

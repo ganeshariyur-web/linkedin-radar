@@ -1,0 +1,19 @@
+{
+  "company": "Ganesh Ariyur, Transformation CIO / CDIO. Lens on the private equity world: firms, their deal and operating teams, and the leaders of the companies they own, for CIO, operating partner and advisory conversations.",
+  "targetRoles": [
+    "PE operating partner / portfolio operations",
+    "Partner / Managing Director / Principal at a private equity firm",
+    "CEO",
+    "CFO",
+    "COO",
+    "Board member / Board director",
+    "CIO / CTO / CDO peer"
+  ],
+  "geography": "United States first; other countries rank lower, not excluded",
+  "companyProfile": "Private equity firms (buyout, growth, mid-market) and their portfolio companies; $500M–$5B portfolio companies in healthcare, life sciences, MedTech, manufacturing, industrials, business services and software",
+  "disqualifiers": "Students and interns, early-career job seekers asking for mentoring, vendors and agencies selling services, lead-generation and marketing agencies, retail investors and personal-finance influencers",
+  "preferredIndustries": ["private equity", "healthcare", "life sciences", "medtech", "manufacturing", "industrials", "business services", "software"],
+  "revenueThreshold": "$500M revenue (or roughly 1,000+ employees when revenue is unknown)",
+  "primaryCountry": "United States",
+  "decisionAuthority": "authority to appoint or sponsor a CIO, operating partner or technology advisor for a portfolio company, or a seat on the investment committee, deal team or portfolio board that approves such an appointment"
+}

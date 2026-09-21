@@ -116,6 +116,10 @@ export interface Thresholds {
   t1RoleConfidence: number; // >=
   t1DisqualifiedMax: number; // <
   t1BigBrandMax: number; // <
+  /** Tier 1 also requires is_big_public_brand ≥ this (0 disables). Lets a lens target large public companies. */
+  t1BigBrandMin: number;
+  /** When true, Tier 1 requires the company to match the preset's watchlist; others cap at Tier 2. */
+  watchlistTier1Only: boolean;
   t2RoleConfidenceMin: number; // >= (and < t1RoleConfidence)
   t2PrivateFamilyMin: number; // >=
   rejectedDisqualifiedMin: number; // >=
@@ -152,6 +156,8 @@ export interface Preset {
   icp: IcpConfig;
   questions: QuestionSpec[];
   thresholds: Thresholds;
+  /** Company names matched in code (never sent to Jev). Optional. */
+  watchlist?: string[];
 }
 
 export interface Enrichment {

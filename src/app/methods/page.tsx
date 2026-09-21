@@ -53,7 +53,7 @@ export default function MethodsPage() {
       <section className="mt-10">
         <Label>Tier rules · thresholds</Label>
         <ul className="mt-2 text-sm space-y-1">
-          <li><b>Tier 1</b>: role in target roles with confidence ≥ {th.t1RoleConfidence}, disqualified &lt; {th.t1DisqualifiedMax}, is_big_public_brand &lt; {th.t1BigBrandMax}.</li>
+          <li><b>Tier 1</b>: role in target roles with confidence ≥ {th.t1RoleConfidence}, disqualified &lt; {th.t1DisqualifiedMax}, is_big_public_brand &lt; {th.t1BigBrandMax}{th.t1BigBrandMin > 0 ? ` and ≥ ${th.t1BigBrandMin}` : ""}{th.watchlistTier1Only ? ", and the company is on the watchlist" : ""}.</li>
           <li><b>Tier 2</b>: target role with confidence {th.t2RoleConfidenceMin}–{th.t1RoleConfidence}, or role “unknown” with company_type in the preferred industries, or likely_private_or_family ≥ {th.t2PrivateFamilyMin} with any executive role. Rows with an empty Position always land here.</li>
           <li><b>Tier 3</b>: remainder, not disqualified.</li>
           <li><b>Rejected</b>: disqualified ≥ {th.rejectedDisqualifiedMin}.</li>
@@ -63,6 +63,13 @@ export default function MethodsPage() {
           <li><b>Cost</b>: input tokens × ${JEV_USD_PER_MILLION_INPUT_TOKENS} per million.</li>
         </ul>
       </section>
+
+      {(p.watchlist?.length ?? 0) > 0 && (
+        <section className="mt-10">
+          <Label>Company watchlist · {p.watchlist!.length} names, matched in code</Label>
+          <p className="mt-2 text-xs font-mono leading-relaxed">{p.watchlist!.slice(0, 60).join(" · ")}{p.watchlist!.length > 60 ? " · …" : ""}</p>
+        </section>
+      )}
 
       <section className="mt-10">
         <Label>Field contract</Label>

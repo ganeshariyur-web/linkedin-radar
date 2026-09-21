@@ -5,6 +5,7 @@ import { buildDefaultQuestions, hasErrors, validateQuestions, type ValidationIss
 import { CONTRACT } from "@/lib/contract";
 import { BUILTIN_PRESET_NAMES, isPreset, normalizePreset } from "@/lib/presets";
 import { connectionTier, invitationBucket } from "@/lib/tiers";
+import { buildWatchlist, parseWatchlistText } from "@/lib/watchlist";
 import { estimateRun } from "@/lib/cost";
 import { downloadText } from "@/lib/export";
 import { allRowsFor, startRun } from "@/lib/runner";
@@ -85,12 +86,18 @@ export default function StudioPage() {
   const tierCounts = useMemo(() => {
     const m: Record<string, number> = {};
     if (!draft) return m;
+    const wl = buildWatchlist(draft.watchlist);
     for (const row of connections?.rows ?? []) {
-      const t = connectionTier(row, results[resultKey(row.id, "pre")], draft.thresholds, draft.icp);
+      const t = connectionTier(row, results[resultKey(row.id, "pre")], draft.thresholds, draft.icp, wl.size ? !!wl.match(row.company) : false);
       m[t] = (m[t] ?? 0) + 1;
     }
     return m;
   }, [draft, connections, results]);
+  const watchlistHits = useMemo(() => {
+    if (!draft?.watchlist?.length) return 0;
+    const wl = buildWatchlist(draft.watchlist);
+    return (connections?.rows ?? []).filter((r) => wl.match(r.company)).length;
+  }, [draft, connections]);
   const bucketCounts = useMemo(() => {
     const m: Record<string, number> = {};
     if (!draft) return m;
@@ -182,6 +189,22 @@ export default function StudioPage() {
       <div className="grid lg:grid-cols-12 gap-8 mt-8">
         <div className="lg:col-span-8 space-y-10">
           <IcpEditor icp={draft.icp} onChange={(icp) => setDraft({ ...draft, icp })} onRebuild={rebuild} />
+
+          <section data-testid="watchlist-editor">
+            <div className="flex items-center justify-between">
+              <Label>Company watchlist · matched in code by name, never sent to Jev · {draft.watchlist?.length ?? 0} names · {watchlistHits} connections match</Label>
+              <button className="btn ghost" onClick={() => setDraft({ ...draft, watchlist: [] })} disabled={!draft.watchlist?.length}>Clear</button>
+            </div>
+            <textarea
+              className="input mt-2 font-mono text-xs"
+              rows={5}
+              placeholder={"One company per line (or comma separated). Example:\nStryker\nMcKesson\nAGCO Corporation"}
+              value={(draft.watchlist ?? []).join("\n")}
+              onChange={(e) => setDraft({ ...draft, watchlist: parseWatchlistText(e.target.value) })}
+              data-testid="watchlist-text"
+            />
+            <p className="text-[11px] text-muted mt-1">Names are normalised (case, punctuation, Inc/Corp/LLC suffixes) and matched against the exported Company column. Watchlisted people show ★ and can be filtered on the Radar page. Save changes to apply.</p>
+          </section>
 
           <ThresholdSliders th={draft.thresholds} onChange={applyThresholds} tierCounts={tierCounts} bucketCounts={bucketCounts} jevCalls={jevCalls} intentKeys={(draft.questions.find((q) => q.id === "message_intent")?.options ?? []).map((o) => o.key)} />
 

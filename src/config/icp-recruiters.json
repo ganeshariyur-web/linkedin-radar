@@ -1,0 +1,16 @@
+{
+  "company": "Ganesh Ariyur, Transformation CIO / CDIO candidate. Lens on the people who run executive searches: retained search partners, boutique technology-leadership recruiters, and in-house executive recruiting and talent leaders at target companies.",
+  "targetRoles": [
+    "Executive search partner (retained search)",
+    "Executive recruiter / search consultant focused on technology leadership",
+    "Head of executive recruiting / Talent acquisition leader (in-house)",
+    "CHRO / Chief People Officer"
+  ],
+  "geography": "United States first; other countries rank lower, not excluded",
+  "companyProfile": "Retained executive search firms (global and boutique), technology-leadership search practices, and in-house executive recruiting teams at $1B+ PE-backed and public companies in healthcare, life sciences, MedTech, manufacturing and industrials",
+  "disqualifiers": "Students and interns, contract and hourly staffing agencies placing developers or IT contractors, offshore staff-augmentation sellers, resume-writing and career-coaching services, lead-generation and marketing agencies",
+  "preferredIndustries": ["executive search", "human resources", "healthcare", "life sciences", "medtech", "manufacturing", "industrials"],
+  "revenueThreshold": "$1B revenue of the hiring company (or roughly 2,000+ employees when revenue is unknown)",
+  "primaryCountry": "United States",
+  "decisionAuthority": "authority to run or shortlist a C-level technology search, or to put a candidate in front of the hiring CEO or board"
+}

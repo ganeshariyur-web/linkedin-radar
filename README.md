@@ -75,7 +75,13 @@ Two presets ship with the app and can be restored at any time with **Reset to de
 - **Default ICP**: derived from `src/config/icp.json` (customer discovery: owners and operators of privately held companies).
 - **Job Search (CIO)**: derived from `src/config/icp-job-search.json`. Target roles are the people who hire, sponsor or refer for a CIO / CDO / Chief Transformation Officer role (CEO, COO, CFO, CHRO, board members, PE operating partners, retained search partners, peer CIOs). Public companies are in scope, so the big-public-brand exclusion is switched off, and a `recruiter_or_hiring_outreach` intent counts towards Accept on the Invitations tab.
 
-Pick either one from the preset dropdown in Classifier Studio. Both are editable; save your edits under a new name to keep the built-ins pristine.
+- **Private Equity**: PE deal and operating teams, portfolio CEOs / CFOs / COOs, boards and peer CIOs. Adds a `deal_or_advisory_outreach` intent that counts as Accept.
+- **Recruiters & Search Firms**: retained search partners, boutique technology-leadership recruiters, in-house executive recruiting and CHROs. Contract and offshore staffing sellers remain disqualified.
+- **Fortune 1000**: executives at the largest US companies. Membership is a fact, so it is matched in code against the preset's **company watchlist** (paste the names in the Studio; the list is not shipped). Before enrichment Jev only judges the role and whether the company reads as a well-known large public corporation, which this lens requires for Tier 1 instead of excluding. Tick "Tier 1 requires a company on this preset's watchlist" once the list is pasted.
+
+Pick any of them from the preset dropdown in Classifier Studio or the **Lens** dropdown on the Radar page. All are editable; save your edits under a new name to keep the built-ins pristine.
+
+**Company watchlist.** Every preset can carry a list of company names (one per line in the Studio). Matching happens in code against the exported Company column, with case, punctuation and Inc/Corp/LLC suffixes normalised. Watchlisted people show a ★, can be filtered on the Radar page, are at least Tier 2 when they hold any executive role, and can be made a Tier 1 requirement with the threshold checkbox. The list travels with the preset JSON and never reaches Jev.
 
 ## 4. Share a preset
 

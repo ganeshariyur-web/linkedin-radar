@@ -16,8 +16,12 @@ function roleDescription(label: string): string {
   if (/\bcfo\b|chief financial/.test(l)) return "Chief Financial Officer or the head of finance for the whole company.";
   if (/\bchro\b|chief people|chief human/.test(l)) return "Chief Human Resources Officer, Chief People Officer, or the head of HR / talent for the whole company.";
   if (/board/.test(l)) return "Board member, board director, independent director, board chair, or advisory board member.";
-  if (/operating partner|portfolio operations|private equity/.test(l)) return "Private equity operating partner, portfolio operations leader, or PE investment professional (Partner, Principal, Managing Director at a PE firm).";
-  if (/executive search|retained search|recruiter/.test(l)) return "Executive search partner, retained search consultant, or executive recruiter who places C-level and VP roles.";
+  if (/operating partner|portfolio operations/.test(l)) return "Private equity operating partner, portfolio operations or value-creation leader at a PE firm.";
+  if (/private equity/.test(l)) return "Investment professional at a private equity firm: Partner, Managing Director, Principal, or Vice President on the deal side.";
+  if (/head of executive recruiting|talent acquisition|in-house/.test(l)) return "In-house executive recruiting or talent acquisition leader at an operating company (not an agency).";
+  if (/executive search|retained search/.test(l)) return "Partner or consultant at a retained executive search firm who places C-level and VP roles.";
+  if (/recruiter|search consultant/.test(l)) return "Executive recruiter or search consultant, agency or boutique, focused on technology leadership roles (CIO, CTO, VP Engineering).";
+  if (/division president|general manager|business unit/.test(l)) return "Division President, General Manager, or business unit leader with P&L responsibility inside a large company.";
   if (/\bcio\b|\bcto\b|\bcdo\b|\bcdio\b/.test(l)) return "A peer technology executive: CIO, CTO, CDO, CDIO, Chief Digital or Chief Transformation Officer.";
   if (/president|managing director|owner/.test(l))
     return "President, Managing Director, Owner, Principal, Proprietor or Founder-Owner running the company, typically at a privately held or family-owned firm.";
@@ -219,6 +223,9 @@ function industryDescription(ind: string): string {
   if (l.startsWith("medtech") || l.startsWith("medical dev")) return "Medical devices, MedTech, or diagnostics equipment.";
   if (l.startsWith("private equity") || l === "pe") return "A private equity firm, PE fund, or PE-backed holding company.";
   if (l.startsWith("executive search") || l.startsWith("retained search")) return "A retained executive search or leadership advisory firm.";
+  if (l.startsWith("human resources") || l === "hr") return "An HR, talent, recruiting or staffing company.";
+  if (l.startsWith("business services")) return "Business services, BPO, facilities, or outsourced operations.";
+  if (l.startsWith("software") || l.startsWith("tech")) return "Software, SaaS, IT services, or technology companies.";
   return `Operates in ${ind}.`;
 }
 

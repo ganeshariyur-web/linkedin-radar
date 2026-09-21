@@ -17,6 +17,8 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
   t1RoleConfidence: 0.7,
   t1DisqualifiedMax: 0.3,
   t1BigBrandMax: 0.5,
+  t1BigBrandMin: 0,
+  watchlistTier1Only: false,
   t2RoleConfidenceMin: 0.5,
   t2PrivateFamilyMin: 0.6,
   rejectedDisqualifiedMin: 0.7,
@@ -55,6 +57,7 @@ export function connectionTier(
   result: RowResult | undefined,
   th: Thresholds,
   icp: IcpConfig,
+  onWatchlist = false,
 ): ConnectionTier {
   const t = tierInputs(result);
   if (!t) return "unscored";
@@ -68,9 +71,14 @@ export function connectionTier(
   if (t.disqualified >= th.rejectedDisqualifiedMin) return "rejected";
 
   const isTarget = t.role !== null && targets.includes(t.role);
-  if (isTarget && t.roleConfidence >= th.t1RoleConfidence && t.disqualified < th.t1DisqualifiedMax && t.bigBrand < th.t1BigBrandMax) {
-    return "tier1";
+  const bigBrandOk = t.bigBrand < th.t1BigBrandMax && t.bigBrand >= (th.t1BigBrandMin ?? 0);
+  const wouldBeTier1 = isTarget && t.roleConfidence >= th.t1RoleConfidence && t.disqualified < th.t1DisqualifiedMax && bigBrandOk;
+  if (wouldBeTier1) {
+    // With the watchlist rule on, a Tier 1 candidate off the list caps at Tier 2.
+    return !th.watchlistTier1Only || onWatchlist ? "tier1" : "tier2";
   }
+  // A watchlisted company with any executive role is at least Tier 2.
+  if (onWatchlist && t.role !== null && executiveRoles.has(t.role)) return "tier2";
   const midConf = isTarget && t.roleConfidence >= th.t2RoleConfidenceMin && t.roleConfidence < th.t1RoleConfidence;
   const unknownPreferred = t.role === "unknown" && t.companyType !== null && preferred.has(t.companyType);
   const privateExec = t.privateFamily >= th.t2PrivateFamilyMin && t.role !== null && executiveRoles.has(t.role);
