@@ -4,7 +4,7 @@ import { Label } from "../ui";
 
 export function ContractPanel({ available }: { available: Record<string, boolean> }) {
   return (
-    <aside className="border border-line p-4 text-xs" data-testid="contract">
+    <aside className="card p-5 text-xs" data-testid="contract">
       <Label>Field contract · what Jev may read</Label>
       {(["connections", "invitations"] as const).map((tab) => (
         <div key={tab} className="mt-3">

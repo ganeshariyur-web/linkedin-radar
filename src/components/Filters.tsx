@@ -43,7 +43,7 @@ export function Filters({ tab, rows, filters, onChange }: { tab: Tab; rows: Scor
   return (
     <div className="space-y-3" data-testid="filters">
       <div className="flex items-center gap-3">
-        <input className="input !w-64" placeholder="Search name, position, company, message" value={filters.text} onChange={(e) => set("text", e.target.value)} data-testid="filter-text" />
+        <input className="input !w-80" placeholder="Search name, position, company, message" value={filters.text} onChange={(e) => set("text", e.target.value)} data-testid="filter-text" />
         {active > 0 && <button className="btn ghost" onClick={() => onChange({ ...filters, tier: [], role: [], companyType: [], country: [], sizeBand: [], activity: [], connectedFor: [], hasEmail: "any", privateFamily: "any", watchlist: "any", text: "" })}>Clear {active}</button>}
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">

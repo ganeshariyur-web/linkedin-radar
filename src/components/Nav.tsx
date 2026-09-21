@@ -11,24 +11,31 @@ const links = [
 
 export function Nav() {
   const path = usePathname();
+  const today = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   return (
-    <header className="px-4 md:px-8 pt-5 pb-3 flex items-center justify-between gap-4 border-b border-line">
-      <div className="flex items-baseline gap-6">
-        <Link href="/" className="headline text-xl md:text-2xl">
-          LinkedIn Radar
-        </Link>
-        <nav className="hidden sm:flex items-center gap-5">
-          {links.map((l) => (
-            <Link key={l.href} href={l.href} className={`label hover:text-fg ${path === l.href ? "text-fg" : ""}`}>
-              {l.label}
-            </Link>
-          ))}
-        </nav>
+    <header className="px-5 md:px-10 max-w-[1560px] mx-auto">
+      <div className="flex items-center justify-between pt-3 pb-2 text-[10.5px]">
+        <span className="label">{today}</span>
+        <span className="label hidden md:inline">Private · Files stay in your browser</span>
       </div>
-      <div className="flex items-center gap-3">
-        <span className="label hidden md:inline">Private · files stay in your browser</span>
+      <div className="rule-strong" />
+      <div className="flex items-center justify-between gap-6 py-4">
+        <div className="flex items-baseline gap-8">
+          <Link href="/" className="headline text-[26px] md:text-[30px]">
+            LinkedIn <em>Radar</em>
+          </Link>
+          <nav className="hidden sm:flex items-center gap-6">
+            {links.map((l) => (
+              <Link key={l.href} href={l.href} className={`label transition-colors hover:text-fg ${path === l.href ? "text-fg" : ""}`}>
+                {path === l.href && <span className="eyebrow mr-1.5">●</span>}
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
         <ThemeToggle />
       </div>
+      <div className="rule" />
       <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-bg border-t border-line flex justify-around py-3 z-20">
         {links.map((l) => (
           <Link key={l.href} href={l.href} className={`label ${path === l.href ? "text-fg" : ""}`}>

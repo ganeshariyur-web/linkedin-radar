@@ -6,7 +6,7 @@ import { startRun } from "@/lib/runner";
 import { useApp } from "@/lib/store";
 import type { ScoredRow } from "@/lib/derive";
 import type { Tab } from "@/lib/types";
-import { Label, fmtInt } from "./ui";
+import { Label, SectionHead, fmtInt } from "./ui";
 
 export function EnrichPanel({ tab, visible, selectedIds, tier1Ids }: { tab: Tab; visible: ScoredRow[]; selectedIds: string[]; tier1Ids: string[] }) {
   const [progress, setProgress] = useState<EnrichProgress | null>(null);
@@ -38,11 +38,8 @@ export function EnrichPanel({ tab, visible, selectedIds, tier1Ids }: { tab: Tab;
   };
 
   return (
-    <div className="border border-line p-4" data-testid="enrich-panel">
-      <div className="flex items-center justify-between">
-        <Label>Enrichment · Apify</Label>
-        <span className="label">{fmtInt(enrichedCount)} enriched</span>
-      </div>
+    <div className="card p-6" data-testid="enrich-panel">
+      <SectionHead n="04" title="Enrichment · Apify" right={<span className="label">{fmtInt(enrichedCount)} enriched</span>} />
       <p className="text-xs text-muted mt-2 leading-relaxed">
         Sends only the selected profile URLs to <span className="font-mono">{PROFILE_ACTOR.slug}</span>. Company size and industry come from{" "}
         <span className="font-mono">{COMPANY_ACTOR.slug}</span> for distinct Tier 1 companies only.

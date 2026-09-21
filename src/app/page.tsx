@@ -13,7 +13,7 @@ import { Distributions } from "@/components/Distributions";
 import { Filters } from "@/components/Filters";
 import { TableView } from "@/components/TableView";
 import { EnrichPanel } from "@/components/EnrichPanel";
-import { Label, Pill, fmtInt } from "@/components/ui";
+import { Label, Pill, SectionHead, fmtInt } from "@/components/ui";
 
 export default function RadarPage() {
   const hydrated = useApp((s) => s.hydrated);
@@ -81,13 +81,13 @@ export default function RadarPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-4 mt-4 text-xs" data-testid="tier-counts">
+      <div className="flex flex-wrap gap-x-8 gap-y-3 mt-6" data-testid="tier-counts">
         {tierKeys.map((k) => (
-          <button key={k} className="flex items-center gap-2 hover:text-accent" onClick={() => download(k)} title={`Download ${k} as CSV`} data-testid={`count-${k}`}>
-            <span className={`inline-block w-2.5 h-2.5 tile ${k}`} />
-            <span>{tab === "connections" ? TIER_LABEL[k as ConnectionTier] : BUCKET_LABEL[k as InvitationBucket]}</span>
-            <span className="font-mono" data-count={counts.get(k) ?? 0}>{fmtInt(counts.get(k) ?? 0)}</span>
-            <span className="label">csv ↓</span>
+          <button key={k} className="group flex items-center gap-3 text-left" onClick={() => download(k)} title={`Download ${k} as CSV`} data-testid={`count-${k}`}>
+            <span className={`inline-block w-3 h-3 rounded-[2px] tile ${k} !aspect-auto`} />
+            <span className="label !text-fg-2 whitespace-nowrap">{tab === "connections" ? TIER_LABEL[k as ConnectionTier] : BUCKET_LABEL[k as InvitationBucket]}</span>
+            <span className="display-num text-[22px]" data-count={counts.get(k) ?? 0}>{fmtInt(counts.get(k) ?? 0)}</span>
+            <span className="label opacity-0 group-hover:opacity-100 transition-opacity">csv ↓</span>
           </button>
         ))}
         {tab === "invitations" && connections && (
@@ -96,12 +96,21 @@ export default function RadarPage() {
         {tab === "invitations" && !connections && <span className="text-muted">Load Connections.csv to see accepted / pending matching.</span>}
       </div>
 
-      <div className="mt-5"><Filters tab={tab} rows={rows} filters={filters} onChange={setFilters} /></div>
+      <details className="filters mt-6 card px-5 py-4" open={false}>
+        <summary className="flex items-center justify-between">
+          <span className="label !text-fg-2">Filters</span>
+          <span className="label">Tier · role · company type · connected-for · email · watchlist · text</span>
+        </summary>
+        <div className="mt-4"><Filters tab={tab} rows={rows} filters={filters} onChange={setFilters} /></div>
+      </details>
 
-      <div className="grid lg:grid-cols-12 gap-8 mt-6">
+      <div className="grid lg:grid-cols-12 gap-10 mt-8">
         <div className="lg:col-span-7">
+          <SectionHead n="01" title={`${fmtInt(filtered.length)} of ${fmtInt(rows.length)} people`} right={
+            tab === "invitations" ? undefined : <span className="label">Tier 1 garnet · Tier 2 ink · Tier 3 stone · Rejected faded</span>
+          } />
           <div className="flex items-center justify-between mb-2">
-            <Label>{fmtInt(filtered.length)} of {fmtInt(rows.length)} people</Label>
+            <span />
             {tab === "invitations" && (
               <button className="btn ghost" onClick={() => setSelectedForEnrich(filtered.filter((r) => r.kind === "invitation" && r.bucket === "no_signal").map((r) => r.id))}>
                 Select “No signal” rows for enrichment
@@ -116,10 +125,9 @@ export default function RadarPage() {
             )}
           </div>
         </div>
-        <div className="lg:col-span-5 space-y-8">
-          <VerifyingProfile rows={rows} questions={questions} />
-          <div className="hr" />
-          <Distributions rows={rows} />
+        <div className="lg:col-span-5 space-y-10">
+          <div className="card p-6"><VerifyingProfile rows={rows} questions={questions} /></div>
+          <div><Distributions rows={rows} /></div>
         </div>
       </div>
     </div>

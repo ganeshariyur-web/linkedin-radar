@@ -12,7 +12,7 @@ export default function MethodsPage() {
   const th = p.thresholds;
   return (
     <div className="mt-8 max-w-4xl" data-testid="methods">
-      <h1 className="headline text-4xl md:text-5xl">Methods</h1>
+      <h1 className="headline text-[40px] md:text-[56px]"><em>Methods</em></h1>
       <p className="text-sm text-muted mt-2">The active preset “{p.name}”, rendered verbatim. Jev (model <span className="font-mono">jev-latest</span>, TypeSafe) judges meaning from the contract fields only; code owns everything else.</p>
 
       <section className="mt-10">

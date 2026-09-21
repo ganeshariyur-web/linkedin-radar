@@ -1,7 +1,7 @@
 "use client";
 import { countBy, type ScoredRow } from "@/lib/derive";
 import { companySizeBand } from "@/lib/tiers";
-import { Bar, Label, fmtInt } from "./ui";
+import { Bar, Label, SectionHead, fmtInt } from "./ui";
 
 function Dist({ title, data, accent = false }: { title: string; data: { label: string; count: number }[]; accent?: boolean }) {
   const max = Math.max(1, ...data.map((d) => d.count));
@@ -31,7 +31,7 @@ export function Distributions({ rows }: { rows: ScoredRow[] }) {
     : [];
   return (
     <div>
-      <Label>Live distributions</Label>
+      <SectionHead n="03" title="Live distributions" />
       {isConnections ? (
         <>
           <Dist title="Role mix" data={countBy(scored, (r) => r.pre?.answers.role?.answer ?? "–")} accent />

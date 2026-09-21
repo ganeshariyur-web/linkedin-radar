@@ -4,7 +4,7 @@ import { useApp } from "@/lib/store";
 import type { ScoredRow } from "@/lib/derive";
 import type { QuestionAnswer, QuestionSpec, RowResult } from "@/lib/types";
 import { TIER_LABEL, BUCKET_LABEL } from "@/lib/tiers";
-import { Bar, Label, pct, fmtInt } from "./ui";
+import { Bar, Label, SectionHead, pct, fmtInt } from "./ui";
 
 export function VerifyingProfile({ rows, questions }: { rows: ScoredRow[]; questions: QuestionSpec[] }) {
   const selected = useApp((s) => s.selectedRowId);
@@ -16,10 +16,7 @@ export function VerifyingProfile({ rows, questions }: { rows: ScoredRow[]; quest
 
   return (
     <div data-testid="verifying">
-      <div className="flex items-center justify-between">
-        <Label>{live ? "Verifying profile" : selected ? "Selected profile" : "Verifying profile"}</Label>
-        {live && <span className="label text-accent">Live</span>}
-      </div>
+      <SectionHead n="02" title={live ? "Verifying profile" : selected ? "Selected profile" : "Verifying profile"} right={live ? <span className="label text-accent">● Live</span> : undefined} />
       {!row ? (
         <p className="mt-3 text-sm text-muted">Click a tile, or press Run to watch rows score here.</p>
       ) : (
@@ -27,7 +24,7 @@ export function VerifyingProfile({ rows, questions }: { rows: ScoredRow[]; quest
           <div className="flex items-start gap-3">
             {row.enrichment?.photo && <img src={row.enrichment.photo} alt="" className="w-12 h-12 object-cover" referrerPolicy="no-referrer" />}
             <div className="min-w-0">
-              <div className="headline text-2xl truncate">{row.name}</div>
+              <div className="headline text-[30px] truncate">{row.name}</div>
               {row.kind === "connection" ? (
                 <div className="text-xs text-muted mt-1 leading-relaxed">
                   <div className="truncate">{row.row.position || <em>no position</em>}</div>

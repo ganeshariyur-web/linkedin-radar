@@ -41,8 +41,8 @@ export function TopBar({ tab, tier1Count, rowsRead, questionCount, onOpenUploads
   const onPause = () => requestPause();
 
   return (
-    <div className="border-b border-line pb-4 pt-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4">
         <UploadBar onOpenUploads={onOpenUploads} />
         <div className="flex items-center gap-2">
           <label className="flex items-center gap-2 text-xs">
@@ -61,10 +61,10 @@ export function TopBar({ tab, tier1Count, rowsRead, questionCount, onOpenUploads
         </div>
       </div>
       {run.lastError && <div className="mt-2 text-xs text-accent" data-testid="run-error">{run.lastError}</div>}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-4 mt-5" data-testid="tiles">
+      <div className="metrics" data-testid="tiles">
         <Tile label="Rows read" value={fmtInt(rowsRead)} />
         <Tile label="Typed answers" value={fmtInt(typedAnswers)} hint={`rows × ${questionCount} questions`} />
-        <Tile label="Tier 1 so far" value={fmtInt(tier1Count)} />
+        <Tile label="Tier 1 so far" value={fmtInt(tier1Count)} accent />
         <Tile label="Answers / sec" value={perSec ? perSec.toFixed(1) : "–"} />
         <Tile label="Elapsed" value={elapsed ? fmtMs(elapsed) : "–"} />
         <Tile label="Cost so far" value={formatCost(tokens)} hint={`${fmtInt(tokens)} input tokens × $0.042 per million`} />

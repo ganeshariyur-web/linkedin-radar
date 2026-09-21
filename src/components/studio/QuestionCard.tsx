@@ -41,7 +41,7 @@ export function QuestionCard({ q, issues, fieldOptions, onChange, onDelete, onDu
   };
 
   return (
-    <article id={q.id} className={`border p-4 ${q.enabled ? "border-line" : "border-line opacity-60"} ${errs.length ? "!border-accent" : ""}`} data-testid={`qcard-${q.id}`}>
+    <article id={q.id} className={`card p-5 ${q.enabled ? "" : "opacity-60"} ${errs.length ? "!border-accent" : ""}`} data-testid={`qcard-${q.id}`}>
       <div className="flex flex-wrap items-center gap-3">
         <input className="input !w-56 font-mono" value={q.id} onChange={(e) => set("id", e.target.value.trim())} aria-label="Question id" />
         <select className="input !w-28" value={q.type} onChange={(e) => convert(e.target.value as QuestionType)} aria-label="Question type">
