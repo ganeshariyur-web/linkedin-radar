@@ -25,6 +25,7 @@ export default function MethodsPage() {
           <dt className="text-muted">Disqualifiers</dt><dd>{p.icp.disqualifiers}</dd>
           <dt className="text-muted">Preferred industries</dt><dd>{p.icp.preferredIndustries.join(", ")}</dd>
           <dt className="text-muted">Revenue threshold</dt><dd>{p.icp.revenueThreshold}</dd>
+          {p.icp.decisionAuthority && <><dt className="text-muted">Decision authority</dt><dd>{p.icp.decisionAuthority}</dd></>}
         </dl>
       </section>
 
@@ -56,8 +57,8 @@ export default function MethodsPage() {
           <li><b>Tier 2</b>: target role with confidence {th.t2RoleConfidenceMin}–{th.t1RoleConfidence}, or role “unknown” with company_type in the preferred industries, or likely_private_or_family ≥ {th.t2PrivateFamilyMin} with any executive role. Rows with an empty Position always land here.</li>
           <li><b>Tier 3</b>: remainder, not disqualified.</li>
           <li><b>Rejected</b>: disqualified ≥ {th.rejectedDisqualifiedMin}.</li>
-          <li><b>Invitations Accept</b>: message_intent genuine_networking or fan_or_learner with self_described_seniority in {th.seniorBuckets.join(", ")}.</li>
-          <li><b>Ignore</b>: spam_or_bot or wants_to_sell_me_something ≥ {th.invIgnoreMin}. <b>Review</b>: remainder. <b>No signal</b>: message-less rows, never sent to Jev. <b>Outgoing</b>: matched against Connections in code.</li>
+          <li><b>Invitations Accept</b>: message_intent in {th.acceptIntents.join(", ")} with self_described_seniority in {th.seniorBuckets.join(", ")}.</li>
+          <li><b>Ignore</b>: {th.ignoreIntents.join(" or ")} ≥ {th.invIgnoreMin}. <b>Review</b>: remainder. <b>No signal</b>: message-less rows, never sent to Jev. <b>Outgoing</b>: matched against Connections in code.</li>
           <li><b>Final ranking after enrichment</b>: decision_maker × normalised revenue score, rows with in_geography ≥ {th.geographyMin} first.</li>
           <li><b>Cost</b>: input tokens × ${JEV_USD_PER_MILLION_INPUT_TOKENS} per million.</li>
         </ul>

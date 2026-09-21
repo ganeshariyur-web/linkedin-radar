@@ -68,6 +68,15 @@ Two ways to change it:
 
 The build fails if any default question references a field outside the contract (`npm run check:contract`, run automatically as `prebuild`).
 
+### Built-in presets
+
+Two presets ship with the app and can be restored at any time with **Reset to defaults**:
+
+- **Default ICP**: derived from `src/config/icp.json` (customer discovery: owners and operators of privately held companies).
+- **Job Search (CIO)**: derived from `src/config/icp-job-search.json`. Target roles are the people who hire, sponsor or refer for a CIO / CDO / Chief Transformation Officer role (CEO, COO, CFO, CHRO, board members, PE operating partners, retained search partners, peer CIOs). Public companies are in scope, so the big-public-brand exclusion is switched off, and a `recruiter_or_hiring_outreach` intent counts towards Accept on the Invitations tab.
+
+Pick either one from the preset dropdown in Classifier Studio. Both are editable; save your edits under a new name to keep the built-ins pristine.
+
 ## 4. Share a preset
 
 A preset is one JSON file holding the ICP block, every question (instructions, criteria, fields), and the tier thresholds.

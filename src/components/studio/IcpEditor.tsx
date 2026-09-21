@@ -20,6 +20,7 @@ export function IcpEditor({ icp, onChange, onRebuild }: { icp: IcpConfig; onChan
         <Field label="Preferred industries (comma separated; become company_type options)"><input className="input" value={icp.preferredIndustries.join(", ")} onChange={(e) => set("preferredIndustries", list(e.target.value))} /></Field>
         <Field label="Revenue threshold (used by revenue_over_threshold)"><input className="input" value={icp.revenueThreshold} onChange={(e) => set("revenueThreshold", e.target.value)} /></Field>
         <Field label="Disqualifiers"><textarea className="input" value={icp.disqualifiers} onChange={(e) => set("disqualifiers", e.target.value)} /></Field>
+        <Field label="Decision authority (used by decision_maker after enrichment)"><textarea className="input" value={icp.decisionAuthority ?? ""} placeholder="approval authority for a significant advisory or technology engagement at their company" onChange={(e) => set("decisionAuthority", e.target.value)} /></Field>
       </div>
     </div>
   );

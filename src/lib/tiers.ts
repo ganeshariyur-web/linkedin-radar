@@ -22,6 +22,8 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
   rejectedDisqualifiedMin: 0.7,
   invIgnoreMin: 0.7,
   seniorBuckets: ["c_level_or_owner", "director_or_vp"],
+  acceptIntents: ["genuine_networking", "fan_or_learner"],
+  ignoreIntents: ["spam_or_bot", "wants_to_sell_me_something"],
   geographyMin: 0.5,
 };
 
@@ -83,10 +85,9 @@ export function invitationBucket(row: InvitationRow, result: RowResult | undefin
   const intent = result.answers.message_intent;
   const seniority = result.answers.self_described_seniority;
   if (!intent) return "unscored";
-  const pSpam = intent.probabilities["spam_or_bot"] ?? 0;
-  const pSell = intent.probabilities["wants_to_sell_me_something"] ?? 0;
-  if (Math.max(pSpam, pSell) >= th.invIgnoreMin) return "ignore";
-  const goodIntent = intent.answer === "genuine_networking" || intent.answer === "fan_or_learner";
+  const pIgnore = Math.max(0, ...th.ignoreIntents.map((k) => intent.probabilities[k] ?? 0));
+  if (pIgnore >= th.invIgnoreMin) return "ignore";
+  const goodIntent = th.acceptIntents.includes(intent.answer);
   const senior = seniority ? th.seniorBuckets.includes(seniority.answer) : false;
   if (goodIntent && senior) return "accept";
   return "review";

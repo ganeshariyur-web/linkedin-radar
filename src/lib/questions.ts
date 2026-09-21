@@ -13,6 +13,12 @@ function roleDescription(label: string): string {
   if (/chief of staff/.test(l)) return "Chief of Staff, or an equivalent right-hand role to a CEO or President.";
   if (/\bcoo\b/.test(l)) return "Chief Operating Officer, or the head of operations for the whole company.";
   if (/\bceo\b/.test(l)) return "Chief Executive Officer.";
+  if (/\bcfo\b|chief financial/.test(l)) return "Chief Financial Officer or the head of finance for the whole company.";
+  if (/\bchro\b|chief people|chief human/.test(l)) return "Chief Human Resources Officer, Chief People Officer, or the head of HR / talent for the whole company.";
+  if (/board/.test(l)) return "Board member, board director, independent director, board chair, or advisory board member.";
+  if (/operating partner|portfolio operations|private equity/.test(l)) return "Private equity operating partner, portfolio operations leader, or PE investment professional (Partner, Principal, Managing Director at a PE firm).";
+  if (/executive search|retained search|recruiter/.test(l)) return "Executive search partner, retained search consultant, or executive recruiter who places C-level and VP roles.";
+  if (/\bcio\b|\bcto\b|\bcdo\b|\bcdio\b/.test(l)) return "A peer technology executive: CIO, CTO, CDO, CDIO, Chief Digital or Chief Transformation Officer.";
   if (/president|managing director|owner/.test(l))
     return "President, Managing Director, Owner, Principal, Proprietor or Founder-Owner running the company, typically at a privately held or family-owned firm.";
   return `Matches the target role "${label}".`;
@@ -28,6 +34,16 @@ export function buildDefaultQuestions(icp: IcpConfig): QuestionSpec[] {
     key: slug(ind),
     description: industryDescription(ind),
   }));
+  const preferredKeys = new Set(industryOptions.map((o) => o.key));
+  const fixedIndustryOptions = [
+    { key: "professional_services", description: "Consulting, law, accounting, staffing, agencies, advisory, or other professional services." },
+    { key: "tech_or_software", description: "Software, SaaS, IT services, hardware, or internet companies." },
+    { key: "finance", description: "Banking, insurance, private equity, venture capital, wealth management, or lending." },
+    { key: "healthcare", description: "Hospitals, providers, payers, pharma, biotech, or medical devices." },
+    { key: "education_or_nonprofit", description: "Schools, universities, charities, foundations, associations, or government." },
+    { key: "other", description: "A recognisable industry not listed above (retail, hospitality, media, energy, agriculture, real estate)." },
+    { key: "unclear", description: "The name carries no industry signal." },
+  ].filter((o) => !preferredKeys.has(o.key));
 
   const q: QuestionSpec[] = [
     {
@@ -59,16 +75,7 @@ export function buildDefaultQuestions(icp: IcpConfig): QuestionSpec[] {
         "Judge the company's sector from the `company` name text and the `position` title text only. " +
         "There is no other information about the company. Choose \"unclear\" when the name carries no industry signal " +
         "(a surname, initials, or a generic word like \"Group\" alone).",
-      options: [
-        ...industryOptions,
-        { key: "professional_services", description: "Consulting, law, accounting, staffing, agencies, advisory, or other professional services." },
-        { key: "tech_or_software", description: "Software, SaaS, IT services, hardware, or internet companies." },
-        { key: "finance", description: "Banking, insurance, private equity, venture capital, wealth management, or lending." },
-        { key: "healthcare", description: "Hospitals, providers, payers, pharma, biotech, or medical devices." },
-        { key: "education_or_nonprofit", description: "Schools, universities, charities, foundations, associations, or government." },
-        { key: "other", description: "A recognisable industry not listed above (retail, hospitality, media, energy, agriculture, real estate)." },
-        { key: "unclear", description: "The name carries no industry signal." },
-      ],
+      options: [...industryOptions, ...fixedIndustryOptions],
     },
     {
       id: "likely_private_or_family",
@@ -176,7 +183,7 @@ export function buildDefaultQuestions(icp: IcpConfig): QuestionSpec[] {
       enabled: true,
       fields: ["current_title", "headline", "about", "company_size"],
       instructions:
-        "The person holds approval authority for a significant advisory or technology engagement at their company (they can sign off without escalating), " +
+        `The person holds ${icp.decisionAuthority ?? "approval authority for a significant advisory or technology engagement at their company (they can sign off without escalating)"}, ` +
         "judged from `current_title`, `headline`, `about` and `company_size`.",
     },
     {
@@ -207,6 +214,11 @@ function industryDescription(ind: string): string {
   if (l.startsWith("distribut")) return "Wholesale, distribution, or supply of goods to businesses.";
   if (l.startsWith("construct")) return "Construction, contracting, building trades, engineering and construction, or building materials.";
   if (l.startsWith("logist")) return "Logistics, trucking, freight, warehousing, shipping, or supply chain services.";
+  if (l.startsWith("health")) return "Hospitals, health systems, providers, payers, or healthcare services.";
+  if (l.startsWith("life sci")) return "Pharma, biotech, CROs, diagnostics, or life sciences tools.";
+  if (l.startsWith("medtech") || l.startsWith("medical dev")) return "Medical devices, MedTech, or diagnostics equipment.";
+  if (l.startsWith("private equity") || l === "pe") return "A private equity firm, PE fund, or PE-backed holding company.";
+  if (l.startsWith("executive search") || l.startsWith("retained search")) return "A retained executive search or leadership advisory firm.";
   return `Operates in ${ind}.`;
 }
 

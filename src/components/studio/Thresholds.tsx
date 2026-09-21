@@ -15,13 +15,16 @@ const SLIDERS: { key: keyof Thresholds; label: string; hint: string }[] = [
 
 const SENIOR = ["c_level_or_owner", "director_or_vp", "manager_or_ic", "student_or_junior", "not_stated"];
 
-export function ThresholdSliders({ th, onChange, tierCounts, bucketCounts, jevCalls }: {
+export function ThresholdSliders({ th, onChange, tierCounts, bucketCounts, jevCalls, intentKeys }: {
   th: Thresholds;
   onChange: (t: Thresholds) => void;
   tierCounts: Record<string, number>;
   bucketCounts: Record<string, number>;
   jevCalls: number;
+  /** Option keys of the message_intent question in the current draft. */
+  intentKeys: string[];
 }) {
+  const toggle = (list: string[], b: string, on: boolean) => (on ? [...list, b] : list.filter((x) => x !== b));
   return (
     <div data-testid="thresholds">
       <div className="flex items-center justify-between">
@@ -46,6 +49,30 @@ export function ThresholdSliders({ th, onChange, tierCounts, bucketCounts, jevCa
               <span className="font-mono">{b}</span>
             </label>
           ))}
+        </div>
+      </div>
+      <div className="grid md:grid-cols-2 gap-x-8 gap-y-4 mt-4">
+        <div>
+          <Label>Intents that count towards Accept (with a senior bucket)</Label>
+          <div className="flex flex-wrap gap-3 mt-1">
+            {intentKeys.map((b) => (
+              <label key={b} className="text-xs flex items-center gap-1">
+                <input type="checkbox" checked={th.acceptIntents.includes(b)} onChange={(e) => onChange({ ...th, acceptIntents: toggle(th.acceptIntents, b, e.target.checked) })} />
+                <span className="font-mono">{b}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div>
+          <Label>Intents that mean Ignore at the probability above</Label>
+          <div className="flex flex-wrap gap-3 mt-1">
+            {intentKeys.map((b) => (
+              <label key={b} className="text-xs flex items-center gap-1">
+                <input type="checkbox" checked={th.ignoreIntents.includes(b)} onChange={(e) => onChange({ ...th, ignoreIntents: toggle(th.ignoreIntents, b, e.target.checked) })} />
+                <span className="font-mono">{b}</span>
+              </label>
+            ))}
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5 text-xs" data-testid="live-counts">

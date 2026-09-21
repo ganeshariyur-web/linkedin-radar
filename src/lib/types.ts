@@ -121,6 +121,10 @@ export interface Thresholds {
   rejectedDisqualifiedMin: number; // >=
   invIgnoreMin: number; // spam or sell prob >=
   seniorBuckets: string[];
+  /** message_intent answers that count towards Accept (with a senior bucket). */
+  acceptIntents: string[];
+  /** message_intent answers whose probability ≥ invIgnoreMin means Ignore. */
+  ignoreIntents: string[];
   geographyMin: number; // in_geography noul >= counts as ICP geography
 }
 
@@ -137,6 +141,8 @@ export interface IcpConfig {
   preferredIndustries: string[];
   revenueThreshold: string;
   primaryCountry: string;
+  /** What "decision maker" means for this ICP; used by the post-enrichment decision_maker question. */
+  decisionAuthority?: string;
 }
 
 export interface Preset {

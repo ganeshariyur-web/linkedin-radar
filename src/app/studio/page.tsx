@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useActivePreset, useApp, resultKey } from "@/lib/store";
 import { buildDefaultQuestions, hasErrors, validateQuestions, type ValidationIssue } from "@/lib/questions";
 import { CONTRACT } from "@/lib/contract";
-import { buildDefaultPreset, DEFAULT_PRESET_NAME, isPreset, normalizePreset } from "@/lib/presets";
+import { BUILTIN_PRESET_NAMES, isPreset, normalizePreset } from "@/lib/presets";
 import { connectionTier, invitationBucket } from "@/lib/tiers";
 import { estimateRun } from "@/lib/cost";
 import { downloadText } from "@/lib/export";
@@ -173,8 +173,8 @@ export default function StudioPage() {
           <button className="btn ghost" onClick={download}>Download JSON</button>
           <button className="btn ghost" onClick={() => fileRef.current?.click()}>Upload JSON</button>
           <input ref={fileRef} type="file" accept=".json,application/json" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.currentTarget.value = ""; }} />
-          {active.name !== DEFAULT_PRESET_NAME && <button className="btn ghost" onClick={() => deletePreset(active.name)}>Delete preset</button>}
-          <button className="btn ghost" onClick={() => { resetDefaults(); setDraft(buildDefaultPreset()); setStatus("Default preset restored."); }} data-testid="reset-defaults">Reset to defaults</button>
+          {!BUILTIN_PRESET_NAMES.includes(active.name) && <button className="btn ghost" onClick={() => deletePreset(active.name)}>Delete preset</button>}
+          <button className="btn ghost" onClick={() => { resetDefaults(); setStatus("Built-in presets restored (Default ICP and Job Search (CIO)). Your own saved presets are untouched."); }} data-testid="reset-defaults">Reset to defaults</button>
         </div>
       </div>
       {status && <p className="mt-3 text-xs text-accent" data-testid="studio-status">{status}</p>}
@@ -183,7 +183,7 @@ export default function StudioPage() {
         <div className="lg:col-span-8 space-y-10">
           <IcpEditor icp={draft.icp} onChange={(icp) => setDraft({ ...draft, icp })} onRebuild={rebuild} />
 
-          <ThresholdSliders th={draft.thresholds} onChange={applyThresholds} tierCounts={tierCounts} bucketCounts={bucketCounts} jevCalls={jevCalls} />
+          <ThresholdSliders th={draft.thresholds} onChange={applyThresholds} tierCounts={tierCounts} bucketCounts={bucketCounts} jevCalls={jevCalls} intentKeys={(draft.questions.find((q) => q.id === "message_intent")?.options ?? []).map((o) => o.key)} />
 
           {groups.map((g) => (
             <section key={g.title}>

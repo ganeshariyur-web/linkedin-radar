@@ -1,0 +1,20 @@
+{
+  "company": "Ganesh Ariyur, Transformation CIO / CDIO for PE-backed and public companies. Seeking a CIO, CDO, CDIO or Chief Transformation Officer role (selectively PE Operating Partner) at a $1B–$5B company; the people who matter are those who hire, sponsor or refer for that role.",
+  "targetRoles": [
+    "CEO",
+    "COO",
+    "CFO",
+    "CHRO / Chief People Officer",
+    "Board member / Board director",
+    "PE operating partner / portfolio operations",
+    "Executive search partner (retained search)",
+    "CIO / CTO / CDO peer"
+  ],
+  "geography": "United States first (Metro Atlanta home base, open to relocation); other countries rank lower, not excluded",
+  "companyProfile": "PE-backed or public companies, $1B–$5B revenue (roughly 2,000+ employees when revenue is unknown); healthcare, life sciences, MedTech, manufacturing and industrials preferred; private equity firms and retained executive search firms count as target companies",
+  "disqualifiers": "Students and interns, early-career job seekers asking for mentoring or referrals, vendors and agencies selling services to CIOs, lead-generation and marketing agencies, founders of pre-revenue startups",
+  "preferredIndustries": ["healthcare", "life sciences", "medtech", "manufacturing", "industrials", "private equity", "executive search"],
+  "revenueThreshold": "$1B revenue (or roughly 2,000+ employees when revenue is unknown)",
+  "primaryCountry": "United States",
+  "decisionAuthority": "authority to hire or sponsor a C-level technology executive (CIO, CDO, CTO or Chief Transformation Officer), or a seat on the board, PE deal team or search engagement that approves such a hire"
+}

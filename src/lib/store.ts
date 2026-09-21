@@ -15,7 +15,7 @@ import type {
   Tab,
   UploadStats,
 } from "./types";
-import { buildDefaultPreset, DEFAULT_PRESET_NAME, normalizePreset } from "./presets";
+import { buildDefaultPreset, builtinPresets, BUILTIN_PRESET_NAMES, DEFAULT_PRESET_NAME, normalizePreset } from "./presets";
 import { matchInvitations } from "./join";
 
 export type RunStatus = "idle" | "running" | "paused" | "done" | "error";
@@ -114,7 +114,7 @@ export const useApp = create<AppState>((set, get) => ({
   results: {},
   enrichment: {},
   flags: {},
-  presets: [buildDefaultPreset()],
+  presets: builtinPresets(),
   activePresetName: DEFAULT_PRESET_NAME,
   run: idleRun,
   selectedRowId: null,
@@ -135,8 +135,8 @@ export const useApp = create<AppState>((set, get) => ({
         idbGet<string>(KEYS.activePresetName),
         idbGet<"light" | "dark" | "system">(KEYS.theme),
       ]);
-      const normalizedPresets = (presets && presets.length ? presets : [buildDefaultPreset()]).map(normalizePreset);
-      if (!normalizedPresets.some((p) => p.name === DEFAULT_PRESET_NAME)) normalizedPresets.unshift(buildDefaultPreset());
+      const normalizedPresets = (presets && presets.length ? presets : builtinPresets()).map(normalizePreset);
+      for (const b of builtinPresets()) if (!normalizedPresets.some((p) => p.name === b.name)) normalizedPresets.push(b);
       const active = activePresetName && normalizedPresets.some((p) => p.name === activePresetName) ? activePresetName : DEFAULT_PRESET_NAME;
       const base = { connections: connections ?? null, invitations: invitations ?? null };
       set({
@@ -225,7 +225,7 @@ export const useApp = create<AppState>((set, get) => ({
   },
 
   deletePreset: (name) => {
-    if (name === DEFAULT_PRESET_NAME) return;
+    if (BUILTIN_PRESET_NAMES.includes(name)) return;
     const presets = get().presets.filter((x) => x.name !== name);
     const active = get().activePresetName === name ? DEFAULT_PRESET_NAME : get().activePresetName;
     set({ presets, activePresetName: active });
@@ -240,11 +240,12 @@ export const useApp = create<AppState>((set, get) => ({
   },
 
   resetDefaults: () => {
-    const presets = get().presets.filter((x) => x.name !== DEFAULT_PRESET_NAME);
-    presets.unshift(buildDefaultPreset());
-    set({ presets, activePresetName: DEFAULT_PRESET_NAME });
+    const active = get().activePresetName;
+    const presets = [...builtinPresets(), ...get().presets.filter((x) => !BUILTIN_PRESET_NAMES.includes(x.name))];
+    const next = BUILTIN_PRESET_NAMES.includes(active) ? active : DEFAULT_PRESET_NAME;
+    set({ presets, activePresetName: next });
     persist("presets", presets);
-    persist("activePresetName", DEFAULT_PRESET_NAME);
+    persist("activePresetName", next);
   },
 
   activePreset: () => {
