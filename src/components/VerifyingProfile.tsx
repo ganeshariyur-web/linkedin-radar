@@ -22,7 +22,7 @@ export function VerifyingProfile({ rows, questions }: { rows: ScoredRow[]; quest
       ) : (
         <div className="mt-3">
           <div className="flex items-start gap-3">
-            {row.enrichment?.photo && <img src={row.enrichment.photo} alt="" className="w-12 h-12 object-cover" referrerPolicy="no-referrer" />}
+            {row.enrichment?.photo && <img src={row.enrichment.photo} alt="" className="w-14 h-14 object-cover rounded-[3px]" referrerPolicy="no-referrer" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />}
             <div className="min-w-0">
               <div className="headline text-[30px] truncate">{row.name}</div>
               {row.kind === "connection" ? (
@@ -36,7 +36,10 @@ export function VerifyingProfile({ rows, questions }: { rows: ScoredRow[]; quest
                     {row.watchlisted && <span className="text-accent">· watchlist: {row.watchlisted}</span>}
                   </div>
                   {row.enrichment && (
-                    <div className="mt-1">{[row.enrichment.headline, row.enrichment.location].filter(Boolean).join(" · ")}</div>
+                    <div className="mt-1.5 text-fg-2">
+                      <span className="label text-accent mr-2">Enriched</span>
+                      {[row.enrichment.headline, row.enrichment.location, row.enrichment.companySize ? `${row.enrichment.companySize.toLocaleString()} employees` : null, row.enrichment.companyIndustry].filter(Boolean).join(" · ")}
+                    </div>
                   )}
                 </div>
               ) : (

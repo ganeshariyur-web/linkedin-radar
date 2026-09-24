@@ -1,19 +1,44 @@
 "use client";
 import { useRef, useState } from "react";
 import { PROFILE_ACTOR, COMPANY_ACTOR } from "@/config/apify";
-import { abortEnrichment, enrichRows, estimateCompanyUsd, estimateProfileUsd, importEnrichmentJson, profileUrlsFor, type EnrichProgress } from "@/lib/enrich-client";
+import { abortEnrichment, collectRun, enrichRows, estimateCompanyUsd, estimateProfileUsd, importEnrichmentJson, listRecentRuns, profileUrlsFor, type EnrichProgress, type RecentRun } from "@/lib/enrich-client";
 import { startRun } from "@/lib/runner";
 import { useApp } from "@/lib/store";
 import type { ScoredRow } from "@/lib/derive";
 import type { Tab } from "@/lib/types";
-import { Label, SectionHead, fmtInt } from "./ui";
+import { Bar, Label, SectionHead, fmtInt } from "./ui";
+import { useEffect } from "react";
 
 export function EnrichPanel({ tab, visible, selectedIds, tier1Ids }: { tab: Tab; visible: ScoredRow[]; selectedIds: string[]; tier1Ids: string[] }) {
   const [progress, setProgress] = useState<EnrichProgress | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [importMsg, setImportMsg] = useState<string | null>(null);
+  const [recent, setRecent] = useState<RecentRun[] | null>(null);
+  const [recentMsg, setRecentMsg] = useState<string | null>(null);
+  const [collecting, setCollecting] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const enrichment = useApp((s) => s.enrichment);
+  const hasRows = useApp((s) => !!s.connections || !!s.invitations);
+
+  // Finished runs on the account whose results may not have been collected (e.g. the page was left mid-run).
+  useEffect(() => {
+    if (!hasRows) return;
+    listRecentRuns().then(setRecent).catch(() => setRecent([]));
+  }, [hasRows]);
+
+  const collect = async (run: RecentRun) => {
+    setCollecting(run.runId);
+    try {
+      const r = await collectRun(run);
+      setRecentMsg(run.kind === "profile"
+        ? `Collected ${r.attached} of ${r.returned} profiles from the run of ${new Date(run.startedAt).toLocaleString()}${r.empty ? ` · ${r.empty} empty` : ""}${r.unmatched ? ` · ${r.unmatched} unmatched` : ""}${r.attached ? " · post-enrichment questions are running" : ""}.`
+        : `Attached company details from ${r.returned} companies.`);
+    } catch (e) {
+      setRecentMsg(`Could not collect: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setCollecting(null);
+    }
+  };
 
   const targetIds = selectedIds.length ? selectedIds : visible.map((r) => r.id);
   const targets = profileUrlsFor(targetIds).filter((t) => !enrichment[t.rowId]);
@@ -72,8 +97,32 @@ export function EnrichPanel({ tab, visible, selectedIds, tier1Ids }: { tab: Tab;
       >
         Or drop an enrichment JSON file here (raw actor items or a previous export). Fallback when Apify is unavailable.
       </div>
-      {progress && <div className={`mt-3 text-xs ${progress.phase === "error" ? "text-accent" : ""}`} data-testid="enrich-progress">{progress.message}{progress.usdSpent ? ` · $${progress.usdSpent.toFixed(3)} spent` : ""}</div>}
+      {progress && (
+        <div className="mt-4" data-testid="enrich-progress">
+          {busy && <Bar value={progress.total ? progress.received / progress.total : 0.05} accent className="mb-2" />}
+          <div className={`text-xs ${progress.phase === "error" ? "text-accent" : progress.phase === "done" ? "text-fg" : "text-muted"}`}>
+            {busy && <span className="label text-accent mr-2">● Working</span>}
+            {progress.message}{progress.usdSpent ? ` · $${progress.usdSpent.toFixed(3)} spent` : ""}
+          </div>
+          {busy && <div className="text-[11px] text-muted mt-1">Apify runs take 10 to 60 seconds. Results attach only while this page stays open; if you leave, collect them below afterwards.</div>}
+        </div>
+      )}
       {importMsg && <div className="mt-2 text-xs">{importMsg}</div>}
+      {recent && recent.length > 0 && (
+        <div className="mt-5 rule pt-4" data-testid="recover-runs">
+          <Label>Finished Apify runs on your account · collect without paying again</Label>
+          <ul className="mt-2 space-y-1.5 text-xs">
+            {recent.slice(0, 6).map((r) => (
+              <li key={r.runId} className="flex flex-wrap items-center gap-3">
+                <span className="num">{new Date(r.startedAt).toLocaleString()}</span>
+                <span className="text-muted">{r.kind} · {fmtInt(r.itemCount ?? 0)} result{(r.itemCount ?? 0) === 1 ? "" : "s"}{r.usd ? ` · $${r.usd.toFixed(3)}` : ""}</span>
+                <button className="btn ghost !py-1 !px-2" disabled={!!collecting} onClick={() => collect(r)} data-testid={`collect-${r.runId}`}>{collecting === r.runId ? "Collecting…" : "Collect"}</button>
+              </li>
+            ))}
+          </ul>
+          {recentMsg && <div className="mt-2 text-xs">{recentMsg}</div>}
+        </div>
+      )}
     </div>
   );
 }

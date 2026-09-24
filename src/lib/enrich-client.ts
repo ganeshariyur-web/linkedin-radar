@@ -6,6 +6,7 @@
 import { COMPANY_ACTOR, PROFILE_ACTOR, estimateUsd, mapCompanyItem, mapProfileItem, type MappedCompany, type MappedProfile } from "@/config/apify";
 import { urlKey } from "./join";
 import { useApp } from "./store";
+import { startRun as startScoring } from "./runner";
 import type { Enrichment } from "./types";
 
 export interface EnrichProgress {
@@ -15,6 +16,17 @@ export interface EnrichProgress {
   total: number;
   message: string;
   usdSpent: number | null;
+  /** Items the actor returned that could not be attached to any row (URL changed, private, or not in the upload). */
+  unmatched?: number;
+  /** Items the actor returned with no profile at all (private or missing). */
+  empty?: number;
+}
+
+export interface AttachReport {
+  returned: number;
+  attached: number;
+  unmatched: number;
+  empty: number;
 }
 
 export function estimateProfileUsd(count: number) {
@@ -100,13 +112,16 @@ export function urlIndex(): Map<string, string> {
   return m;
 }
 
-export function attachProfiles(items: MappedProfile[], source: Enrichment["source"]): number {
+export function attachProfiles(items: MappedProfile[], source: Enrichment["source"]): AttachReport {
   const idx = urlIndex();
   const out: Enrichment[] = [];
+  let unmatched = 0;
+  let empty = 0;
   for (const p of items) {
     const keys = [p.linkedinUrl ? urlKey(p.linkedinUrl) : "", p.publicIdentifier ? `linkedin.com/in/${p.publicIdentifier.toLowerCase()}` : ""].filter(Boolean);
+    if (keys.length === 0) { empty++; continue; }
     const rowId = keys.map((k) => idx.get(k)).find(Boolean);
-    if (!rowId) continue;
+    if (!rowId) { unmatched++; continue; }
     const existing = useApp.getState().enrichment[rowId];
     const e = toEnrichment(rowId, p, source);
     if (existing) {
@@ -117,8 +132,8 @@ export function attachProfiles(items: MappedProfile[], source: Enrichment["sourc
     }
     out.push(e);
   }
-  useApp.getState().setEnrichment(out);
-  return out.length;
+  if (out.length) useApp.getState().setEnrichment(out);
+  return { returned: items.length, attached: out.length, unmatched, empty };
 }
 
 export function attachCompanies(items: MappedCompany[]): number {
@@ -164,8 +179,10 @@ export async function enrichRows(rowIds: string[], onProgress: (p: EnrichProgres
   const targets = profileUrlsFor(rowIds);
   const total = targets.length;
   let received = 0;
+  let unmatched = 0;
+  let empty = 0;
   let usd = 0;
-  const prog = (patch: Partial<EnrichProgress>) => onProgress({ phase: "polling", runId: null, received, total, message: "", usdSpent: usd, ...patch });
+  const prog = (patch: Partial<EnrichProgress>) => onProgress({ phase: "polling", runId: null, received, total, message: "", usdSpent: usd, unmatched, empty, ...patch });
   try {
     for (let i = 0; i < targets.length; i += PROFILE_ACTOR.maxItemsPerRun) {
       const chunk = targets.slice(i, i + PROFILE_ACTOR.maxItemsPerRun).map((t) => t.url);
@@ -176,10 +193,13 @@ export async function enrichRows(rowIds: string[], onProgress: (p: EnrichProgres
         run.runId,
         run.datasetId,
         (items) => {
-          received += attachProfiles(items, "apify");
+          const r = attachProfiles(items, "apify");
+          received += r.attached;
+          unmatched += r.unmatched;
+          empty += r.empty;
           prog({ phase: "polling", runId: run.runId, message: `Received ${received} of ${total} profiles` });
         },
-        (status) => prog({ phase: "polling", runId: run.runId, message: `Run ${status.toLowerCase()} · ${received} of ${total} profiles` }),
+        (status) => prog({ phase: "polling", runId: run.runId, message: `Apify run ${status.toLowerCase()} · ${received} of ${total} profiles so far · keep this page open` }),
       );
       if (u !== null) usd += u;
     }
@@ -201,11 +221,63 @@ export async function enrichRows(rowIds: string[], onProgress: (p: EnrichProgres
       });
       if (u !== null) usd += u;
     }
-    onProgress({ phase: "done", runId: null, received, total, message: `Enriched ${received} of ${total} profiles${companies.length ? ` and ${companies.length} companies` : ""}`, usdSpent: usd });
+    onProgress({ phase: "done", runId: null, received, total, unmatched, empty, usdSpent: usd, message: summaryMessage(received, total, unmatched, empty, companies.length) });
+    if (received > 0) startScoring({ tab: "connections", pass: "post" });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    onProgress({ phase: msg === "aborted" ? "aborted" : "error", runId: null, received, total, message: msg === "aborted" ? "Enrichment stopped." : msg, usdSpent: usd });
+    onProgress({ phase: msg === "aborted" ? "aborted" : "error", runId: null, received, total, unmatched, empty, message: msg === "aborted" ? "Enrichment stopped." : msg, usdSpent: usd });
   }
+}
+
+export function summaryMessage(attached: number, total: number, unmatched: number, empty: number, companies: number): string {
+  const parts = [`Enriched ${attached} of ${total} profiles`];
+  if (companies) parts.push(`${companies} companies looked up`);
+  if (empty) parts.push(`${empty} returned empty (private or missing profile)`);
+  if (unmatched) parts.push(`${unmatched} could not be matched to a row (the profile URL has changed since the export)`);
+  if (attached > 0) parts.push("post-enrichment questions are running now");
+  return parts.join(" · ") + ".";
+}
+
+export interface RecentRun {
+  runId: string;
+  datasetId: string;
+  kind: "profile" | "company";
+  status: string;
+  startedAt: string;
+  finishedAt: string | null;
+  usd: number | null;
+  itemCount: number | null;
+}
+
+/** Finished Apify runs on the account, so results paid for earlier can be collected without a new run. */
+export async function listRecentRuns(): Promise<RecentRun[]> {
+  const res = await fetch("/api/enrich?action=recent");
+  const j = await res.json();
+  if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
+  return (j.runs as RecentRun[]).filter((r) => r.status === "SUCCEEDED" && (r.itemCount ?? 0) > 0);
+}
+
+/** Collect a finished run's items and attach them. Free: reads the dataset only. */
+export async function collectRun(run: RecentRun): Promise<AttachReport & { companies: number }> {
+  let offset = 0;
+  const report = { returned: 0, attached: 0, unmatched: 0, empty: 0, companies: 0 };
+  for (;;) {
+    const res = await fetch(`/api/enrich?runId=${encodeURIComponent(run.runId)}&datasetId=${encodeURIComponent(run.datasetId)}&offset=${offset}&kind=${run.kind}`);
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
+    const items = (j.items ?? []) as unknown[];
+    if (items.length === 0) break;
+    if (run.kind === "profile") {
+      const r = attachProfiles(items as MappedProfile[], "apify");
+      report.returned += r.returned; report.attached += r.attached; report.unmatched += r.unmatched; report.empty += r.empty;
+    } else {
+      report.companies += attachCompanies(items as MappedCompany[]);
+      report.returned += items.length;
+    }
+    offset = j.nextOffset;
+  }
+  if (report.attached > 0) startScoring({ tab: "connections", pass: "post" });
+  return report;
 }
 
 /** Import an enrichment JSON export (raw actor items or mapped records). */
@@ -223,5 +295,7 @@ export function importEnrichmentJson(text: string): { attached: number; kind: st
     // Company items
     return { attached: attachCompanies(recs.map(mapCompanyItem)), kind: "company" };
   }
-  return { attached: attachProfiles(recs.map(mapProfileItem), "import"), kind: "profile" };
+  const r = attachProfiles(recs.map(mapProfileItem), "import");
+  if (r.attached > 0) startScoring({ tab: "connections", pass: "post" });
+  return { attached: r.attached, kind: `profile (${r.unmatched} unmatched, ${r.empty} empty)` };
 }

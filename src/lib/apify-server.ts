@@ -48,4 +48,30 @@ export async function getItems(datasetId: string, offset: number, limit = 100): 
   return apify<Record<string, unknown>[]>(`/datasets/${datasetId}/items?offset=${offset}&limit=${limit}&clean=true`);
 }
 
+export interface RunSummary {
+  id: string;
+  actId: string;
+  status: string;
+  startedAt: string;
+  finishedAt?: string;
+  defaultDatasetId: string;
+  usageTotalUsd?: number;
+  stats?: { datasetItemCount?: number };
+}
+
+/** Most recent runs on this account (all actors); the route filters to ours. */
+export async function listRecentRuns(limit = 20): Promise<RunSummary[]> {
+  const r = await apify<{ data: { items: RunSummary[] } }>(`/actor-runs?limit=${limit}&desc=true`);
+  return r.data.items;
+}
+
+export async function datasetItemCount(datasetId: string): Promise<number | null> {
+  try {
+    const r = await apify<{ data: { itemCount?: number } }>(`/datasets/${datasetId}`);
+    return r.data.itemCount ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export const TERMINAL = new Set(["SUCCEEDED", "FAILED", "ABORTED", "TIMED-OUT"]);

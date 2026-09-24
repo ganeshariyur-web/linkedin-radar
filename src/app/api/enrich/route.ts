@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { COMPANY_ACTOR, PROFILE_ACTOR, estimateUsd, mapCompanyItem, mapProfileItem, type ActorConfig } from "@/config/apify";
-import { abortRun, getItems, getRun, startRun, TERMINAL } from "@/lib/apify-server";
+import { abortRun, datasetItemCount, getItems, getRun, listRecentRuns, startRun, TERMINAL } from "@/lib/apify-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +19,7 @@ function actorFor(kind: string): ActorConfig | null {
  * POST { action: "start", kind: "profile" | "company", urls: string[] }  → starts one Apify run (≤ 100 URLs)
  * POST { action: "abort", runId }
  * GET  ?runId=&datasetId=&offset=&kind=                                   → status + newly available mapped items
+ * GET  ?action=recent                                                      → recent runs of the configured actors (for recovery)
  * Only LinkedIn profile or company URLs are accepted; nothing else leaves the browser.
  */
 export async function POST(req: NextRequest) {
@@ -56,6 +57,25 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   if (!process.env.APIFY_TOKEN) return json({ error: "APIFY_TOKEN is not configured on the server." }, 503);
   const sp = req.nextUrl.searchParams;
+  if (sp.get("action") === "recent") {
+    try {
+      const ours = new Map([[PROFILE_ACTOR.actorId, "profile"], [COMPANY_ACTOR.actorId, "company"]]);
+      const runs = (await listRecentRuns(25)).filter((r) => ours.has(r.actId));
+      const out = await Promise.all(runs.map(async (r) => ({
+        runId: r.id,
+        datasetId: r.defaultDatasetId,
+        kind: ours.get(r.actId),
+        status: r.status,
+        startedAt: r.startedAt,
+        finishedAt: r.finishedAt ?? null,
+        usd: r.usageTotalUsd ?? null,
+        itemCount: r.stats?.datasetItemCount ?? (await datasetItemCount(r.defaultDatasetId)),
+      })));
+      return json({ runs: out });
+    } catch (e) {
+      return json({ error: e instanceof Error ? e.message : String(e) }, 502);
+    }
+  }
   const runId = sp.get("runId");
   const datasetId = sp.get("datasetId");
   const kind = sp.get("kind") ?? "profile";

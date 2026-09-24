@@ -1,6 +1,13 @@
 "use client";
+import { useState } from "react";
 import { useApp } from "@/lib/store";
 import type { ScoredRow } from "@/lib/derive";
+
+function Photo({ src, fallback }: { src: string; fallback: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <>{fallback}</>;
+  return <img src={src} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
+}
 
 export function AvatarGrid({ rows }: { rows: ScoredRow[] }) {
   const selected = useApp((s) => s.selectedRowId);
@@ -23,7 +30,7 @@ export function AvatarGrid({ rows }: { rows: ScoredRow[] }) {
             title={`${r.name}${r.kind === "connection" ? ` · ${r.row.position || "(no position)"} · ${r.row.company || "(no company)"}` : ""}`}
             onClick={() => setSelected(selected === r.id ? null : r.id)}
           >
-            {photo ? <img src={photo} alt="" loading="lazy" referrerPolicy="no-referrer" /> : r.initials}
+            {photo ? <Photo src={photo} fallback={r.initials} /> : r.initials}
           </button>
         );
       })}

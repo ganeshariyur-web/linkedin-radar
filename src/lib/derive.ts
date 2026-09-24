@@ -104,11 +104,12 @@ export interface Filters {
   hasEmail: "any" | "yes" | "no";
   privateFamily: "any" | "yes" | "no";
   watchlist: "any" | "yes" | "no";
+  enriched: "any" | "yes" | "no";
   text: string;
 }
 
 export const emptyFilters: Filters = {
-  tier: [], role: [], companyType: [], country: [], sizeBand: [], activity: [], connectedFor: [], hasEmail: "any", privateFamily: "any", watchlist: "any", text: "",
+  tier: [], role: [], companyType: [], country: [], sizeBand: [], activity: [], connectedFor: [], hasEmail: "any", privateFamily: "any", watchlist: "any", enriched: "any", text: "",
 };
 
 export function applyFilters(rows: ScoredRow[], f: Filters, privateMin: number): ScoredRow[] {
@@ -120,6 +121,8 @@ export function applyFilters(rows: ScoredRow[], f: Filters, privateMin: number):
     if (f.role.length && !f.role.includes(role)) return false;
     const ct = r.pre?.answers.company_type?.answer ?? "unscored";
     if (f.companyType.length && !f.companyType.includes(ct)) return false;
+    if (f.enriched === "yes" && !r.enrichment) return false;
+    if (f.enriched === "no" && r.enrichment) return false;
     const country = r.enrichment?.country ?? "unknown";
     if (f.country.length && !f.country.includes(country)) return false;
     const band = companySizeBand(r.enrichment);
