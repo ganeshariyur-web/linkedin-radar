@@ -59,6 +59,7 @@ async function poll<T>(kind: "profile" | "company", runId: string, datasetId: st
     const res = await fetch(`/api/enrich?runId=${encodeURIComponent(runId)}&datasetId=${encodeURIComponent(datasetId)}&offset=${offset}&kind=${kind}`);
     const j = await res.json();
     if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
+    if (j.actorError) throw new Error(`Apify actor reported: ${j.actorError}`);
     if (j.items?.length) {
       onItems(j.items as T[]);
       offset = j.nextOffset;
@@ -69,6 +70,7 @@ async function poll<T>(kind: "profile" | "company", runId: string, datasetId: st
       // One final fetch to drain remaining items after the run finished.
       const res2 = await fetch(`/api/enrich?runId=${encodeURIComponent(runId)}&datasetId=${encodeURIComponent(datasetId)}&offset=${offset}&kind=${kind}`);
       const j2 = await res2.json();
+      if (res2.ok && j2.actorError) throw new Error(`Apify actor reported: ${j2.actorError}`);
       if (res2.ok && j2.items?.length) onItems(j2.items as T[]);
       return usd;
     }
@@ -186,7 +188,7 @@ export async function enrichRows(rowIds: string[], onProgress: (p: EnrichProgres
   try {
     for (let i = 0; i < targets.length; i += PROFILE_ACTOR.maxItemsPerRun) {
       const chunk = targets.slice(i, i + PROFILE_ACTOR.maxItemsPerRun).map((t) => t.url);
-      prog({ phase: "starting", message: `Starting profile run ${Math.floor(i / PROFILE_ACTOR.maxItemsPerRun) + 1} (${chunk.length} URLs)` });
+      prog({ phase: "starting", message: `Starting profile run ${Math.floor(i / PROFILE_ACTOR.maxItemsPerRun) + 1} of ${Math.ceil(targets.length / PROFILE_ACTOR.maxItemsPerRun)} (${chunk.length} profiles; free Apify accounts allow 10 per run)` });
       const run = await startRun("profile", chunk);
       const u = await poll<MappedProfile>(
         "profile",
@@ -203,30 +205,42 @@ export async function enrichRows(rowIds: string[], onProgress: (p: EnrichProgres
       );
       if (u !== null) usd += u;
     }
-    // Company pass for the requested rows (Tier 1) whose company URL lacks size.
-    const s = useApp.getState();
-    const companyUrls = new Set<string>();
-    for (const id of companyRowIds) {
-      const e = s.enrichment[id];
-      if (e?.companyLinkedinUrl && e.companySize === null && /linkedin\.com\/company\//i.test(e.companyLinkedinUrl)) companyUrls.add(normalizeForActor(e.companyLinkedinUrl));
-    }
-    const companies = Array.from(companyUrls);
-    for (let i = 0; i < companies.length; i += COMPANY_ACTOR.maxItemsPerRun) {
-      const chunk = companies.slice(i, i + COMPANY_ACTOR.maxItemsPerRun);
-      prog({ phase: "companies", message: `Looking up ${chunk.length} distinct Tier 1 companies` });
-      const run = await startRun("company", chunk);
-      const u = await poll<MappedCompany>("company", run.runId, run.datasetId, (items) => {
-        attachCompanies(items);
-        prog({ phase: "companies", runId: run.runId, message: `Company details attached` });
-      });
-      if (u !== null) usd += u;
-    }
+    const companies = companyUrlsFor(companyRowIds);
+    const cu = await lookupCompanies(companies, (m) => prog({ phase: "companies", message: m }));
+    usd += cu;
     onProgress({ phase: "done", runId: null, received, total, unmatched, empty, usdSpent: usd, message: summaryMessage(received, total, unmatched, empty, companies.length) });
     if (received > 0) startScoring({ tab: "connections", pass: "post" });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     onProgress({ phase: msg === "aborted" ? "aborted" : "error", runId: null, received, total, unmatched, empty, message: msg === "aborted" ? "Enrichment stopped." : msg, usdSpent: usd });
   }
+}
+
+/** Distinct LinkedIn company pages of enriched rows that still lack a size. */
+export function companyUrlsFor(rowIds: string[]): string[] {
+  const s = useApp.getState();
+  const set = new Set<string>();
+  for (const id of rowIds) {
+    const e = s.enrichment[id];
+    if (e?.companyLinkedinUrl && e.companySize === null && /linkedin\.com\/company\//i.test(e.companyLinkedinUrl)) set.add(normalizeForActor(e.companyLinkedinUrl));
+  }
+  return Array.from(set);
+}
+
+/** Run the company actor over the given company pages, attaching size and industry. Returns USD reported by Apify. */
+export async function lookupCompanies(companies: string[], onMessage: (m: string) => void): Promise<number> {
+  let usd = 0;
+  for (let i = 0; i < companies.length; i += COMPANY_ACTOR.maxItemsPerRun) {
+    const chunk = companies.slice(i, i + COMPANY_ACTOR.maxItemsPerRun);
+    onMessage(`Looking up ${chunk.length} distinct companies`);
+    const run = await startRun("company", chunk);
+    const u = await poll<MappedCompany>("company", run.runId, run.datasetId, (items) => {
+      attachCompanies(items);
+      onMessage("Company details attached");
+    });
+    if (u !== null) usd += u;
+  }
+  return usd;
 }
 
 export function summaryMessage(attached: number, total: number, unmatched: number, empty: number, companies: number): string {
@@ -265,6 +279,7 @@ export async function collectRun(run: RecentRun): Promise<AttachReport & { compa
     const res = await fetch(`/api/enrich?runId=${encodeURIComponent(run.runId)}&datasetId=${encodeURIComponent(run.datasetId)}&offset=${offset}&kind=${run.kind}`);
     const j = await res.json();
     if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
+    if (j.actorError) throw new Error(`That run failed inside Apify: ${j.actorError}`);
     const items = (j.items ?? []) as unknown[];
     if (items.length === 0) break;
     if (run.kind === "profile") {

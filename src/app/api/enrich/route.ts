@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { COMPANY_ACTOR, PROFILE_ACTOR, estimateUsd, mapCompanyItem, mapProfileItem, type ActorConfig } from "@/config/apify";
+import { COMPANY_ACTOR, PROFILE_ACTOR, actorErrorOf, estimateUsd, mapCompanyItem, mapProfileItem, type ActorConfig } from "@/config/apify";
 import { abortRun, datasetItemCount, getItems, getRun, listRecentRuns, startRun, TERMINAL } from "@/lib/apify-server";
 
 export const runtime = "nodejs";
@@ -84,13 +84,15 @@ export async function GET(req: NextRequest) {
   try {
     const run = await getRun(runId);
     const raw = await getItems(datasetId, offset, 100);
-    const items = raw.map((it) => (kind === "company" ? mapCompanyItem(it) : mapProfileItem(it)));
+    const actorError = actorErrorOf(raw);
+    const items = raw.filter((it) => !(Object.keys(it).length <= 2 && typeof it.error === "string")).map((it) => (kind === "company" ? mapCompanyItem(it) : mapProfileItem(it)));
     return json({
       status: run.status,
       finished: TERMINAL.has(run.status),
       items,
       nextOffset: offset + raw.length,
       usageTotalUsd: run.usageTotalUsd ?? null,
+      actorError,
     });
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : String(e) }, 502);

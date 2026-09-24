@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { PROFILE_ACTOR, COMPANY_ACTOR } from "@/config/apify";
-import { abortEnrichment, collectRun, enrichRows, estimateCompanyUsd, estimateProfileUsd, importEnrichmentJson, listRecentRuns, profileUrlsFor, type EnrichProgress, type RecentRun } from "@/lib/enrich-client";
+import { abortEnrichment, collectRun, companyUrlsFor, enrichRows, estimateCompanyUsd, estimateProfileUsd, importEnrichmentJson, listRecentRuns, lookupCompanies, profileUrlsFor, type EnrichProgress, type RecentRun } from "@/lib/enrich-client";
 import { startRun } from "@/lib/runner";
 import { useApp } from "@/lib/store";
 import type { ScoredRow } from "@/lib/derive";
@@ -16,6 +16,24 @@ export function EnrichPanel({ tab, visible, selectedIds, tier1Ids }: { tab: Tab;
   const [recent, setRecent] = useState<RecentRun[] | null>(null);
   const [recentMsg, setRecentMsg] = useState<string | null>(null);
   const [collecting, setCollecting] = useState<string | null>(null);
+  const [companyConfirm, setCompanyConfirm] = useState(false);
+  const [companyMsg, setCompanyMsg] = useState<string | null>(null);
+  const [lookingUp, setLookingUp] = useState(false);
+  // Enriched rows (Tier 1 first, then anything visible) whose company page has no size yet.
+  const pendingCompanies = companyUrlsFor(Array.from(new Set([...tier1Ids, ...visible.map((r) => r.id)])));
+  const runCompanies = async () => {
+    setCompanyConfirm(false);
+    setLookingUp(true);
+    try {
+      const usd = await lookupCompanies(pendingCompanies, setCompanyMsg);
+      setCompanyMsg(`Company size and industry attached for ${pendingCompanies.length} companies${usd ? ` · $${usd.toFixed(3)} spent` : ""} · post-enrichment questions re-running.`);
+      startRun({ tab, pass: "post" });
+    } catch (e) {
+      setCompanyMsg(`Company lookup failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setLookingUp(false);
+    }
+  };
   const fileRef = useRef<HTMLInputElement>(null);
   const enrichment = useApp((s) => s.enrichment);
   const hasRows = useApp((s) => !!s.connections || !!s.invitations);
@@ -87,6 +105,18 @@ export function EnrichPanel({ tab, visible, selectedIds, tier1Ids }: { tab: Tab;
         {enrichedCount > 0 && (
           <button className="btn ghost" onClick={() => startRun({ tab, pass: "post" })} data-testid="run-post">Run post-enrichment questions</button>
         )}
+        {pendingCompanies.length > 0 && !companyConfirm && (
+          <button className="btn" disabled={lookingUp} onClick={() => setCompanyConfirm(true)} data-testid="lookup-companies">
+            {lookingUp ? "Looking up…" : `Look up ${fmtInt(pendingCompanies.length)} companies · $${estimateCompanyUsd(pendingCompanies.length).toFixed(3)}`}
+          </button>
+        )}
+        {companyConfirm && (
+          <>
+            <span className="text-xs self-center">Fetch size and industry for {fmtInt(pendingCompanies.length)} company pages at about ${estimateCompanyUsd(pendingCompanies.length).toFixed(3)}?</span>
+            <button className="btn accent" onClick={runCompanies}>Confirm</button>
+            <button className="btn ghost" onClick={() => setCompanyConfirm(false)}>Cancel</button>
+          </>
+        )}
         <button className="btn ghost" onClick={() => fileRef.current?.click()}>Import enrichment JSON</button>
         <input ref={fileRef} type="file" accept=".json,application/json" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onImport(f); e.currentTarget.value = ""; }} />
       </div>
@@ -108,6 +138,7 @@ export function EnrichPanel({ tab, visible, selectedIds, tier1Ids }: { tab: Tab;
         </div>
       )}
       {importMsg && <div className="mt-2 text-xs">{importMsg}</div>}
+      {companyMsg && <div className="mt-2 text-xs">{companyMsg}</div>}
       {recent && recent.length > 0 && (
         <div className="mt-5 rule pt-4" data-testid="recover-runs">
           <Label>Finished Apify runs on your account · collect without paying again</Label>

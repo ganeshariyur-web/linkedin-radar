@@ -102,6 +102,8 @@ Enrichment configuration is one file: [`src/config/apify.ts`](src/config/apify.t
 - `COMPANY_ACTOR`: `harvestapi/linkedin-company` (id `UwSdACBp7ymaGUJjS`, $0.004 per company), run only for distinct Tier 1 companies whose profile came back with a company URL but no size. `mapCompanyItem` supplies `employeeCount`, `employeeCountRange`, `industry`.
 - `POSTS_ACTOR`: `null`. Set one to populate `last_post_date` / `posts_last_30_days`; until then `active_on_linkedin` resolves to `unknown` by design.
 
+**Free-plan limit.** harvestapi's actors refuse more than 10 items per run on a free Apify account and return a single `{ "error": ... }` record while the run still reports success. The app therefore sends 10 profiles per run (`maxItemsPerRun: 10`), treats an error record as a failed run, and shows the actor's message. On a paid Apify plan raise `maxItemsPerRun` to 100 for both actors.
+
 To swap: change `slug`, `actorId`, pricing and `maxItemsPerRun`; rewrite `buildInput` for the new input schema; rewrite the `map*Item` function for the new output. The API route (`src/app/api/enrich/route.ts`) only accepts LinkedIn profile or company URLs and never sees anything else. If Apify is unavailable, the **Import enrichment JSON** drop zone accepts raw actor items or a previous export.
 
 ## Deploy

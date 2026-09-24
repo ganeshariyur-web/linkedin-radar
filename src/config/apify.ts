@@ -27,7 +27,10 @@ export const PROFILE_ACTOR: ActorConfig = {
   actorId: "LpVuK3Zozwuipa5bp",
   usdPerItem: 0.004, // "$4 per 1000 Profile details" (pricing read 2026-09-21)
   usdPerRunStart: 0,
-  maxItemsPerRun: 100,
+  // The actor refuses more than 10 items per run for free Apify accounts (observed 2026-09-21:
+  // a 100-URL run returned one {error} record and charged one item). A paid Apify plan lifts this;
+  // raise to 100 then. Runs are sequential, so 100 profiles = 10 runs of ~10 seconds each.
+  maxItemsPerRun: 10,
   buildInput: (urls) => ({
     urls,
     profileScraperMode: "Profile details no email ($4 per 1k)",
@@ -39,7 +42,7 @@ export const COMPANY_ACTOR: ActorConfig = {
   actorId: "UwSdACBp7ymaGUJjS",
   usdPerItem: 0.004, // FREE tier "Company details result" (pricing read 2026-09-21)
   usdPerRunStart: 0.00005,
-  maxItemsPerRun: 100,
+  maxItemsPerRun: 10, // same publisher; assume the same free-plan cap until a paid plan is in place
   buildInput: (urls) => ({ companies: urls }),
 };
 
@@ -49,6 +52,15 @@ export const POSTS_ACTOR: ActorConfig | null = null;
 export function estimateUsd(actor: ActorConfig, count: number): number {
   const runs = Math.ceil(count / actor.maxItemsPerRun);
   return count * actor.usdPerItem + runs * actor.usdPerRunStart;
+}
+
+/** An actor-level error record, e.g. {"error": "Free users are limited to 10 items per run..."} */
+export function actorErrorOf(items: Record<string, unknown>[]): string | null {
+  for (const it of items) {
+    const keys = Object.keys(it);
+    if (keys.length <= 2 && typeof it.error === "string") return it.error;
+  }
+  return null;
 }
 
 // ---------- Output mapping ----------
